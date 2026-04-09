@@ -387,5 +387,36 @@ document.getElementById('booking-form').addEventListener('submit', async functio
 
 initCal();
 </script>
+    <form id="booking-form">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="text" name="address" placeholder="Property Address">
+    <input type="date" name="date">
+    <textarea name="notes" placeholder="Notes"></textarea>
+
+    <button type="submit">Submit Booking</button>
+</form>
+
+<script>
+const form = document.querySelector("#booking-form");
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    await fetch("YOUR_MAKE_WEBHOOK_URL", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+
+    alert("Booking submitted!");
+    form.reset();
+});
+</script>
 </body>
 </html>
