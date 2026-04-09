@@ -386,36 +386,49 @@ document.getElementById('booking-form').addEventListener('submit', async functio
 });
 
 initCal();
-</script>
-    <form id="booking-form">
-    <input type="text" name="name" placeholder="Name" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="text" name="address" placeholder="Property Address">
-    <input type="date" name="date">
-    <textarea name="notes" placeholder="Notes"></textarea>
-
-    <button type="submit">Submit Booking</button>
-</form>
-
 <script>
-const form = document.querySelector("#booking-form");
-
-form.addEventListener("submit", async (e) => {
+document.getElementById('booking-form').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    var form = e.target;
 
-    await fetch("YOUR_MAKE_WEBHOOK_URL", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
+    // Ensure date is selected
+    if (!document.getElementById('date-picker').value) { 
+        toggleCal(); 
+        return; 
+    }
+
+    // Collect form data
+    var payload = {};
+    new FormData(form).forEach(function(val, key) { 
+        if (!key.startsWith('_')) payload[key] = val; 
     });
 
-    alert("Booking submitted!");
-    form.reset();
+    // Add timeslot
+    payload['Time Slot'] = document.getElementById('timeslot-input').value || 'No preference';
+
+    // Button state
+    var btn = form.querySelector('button');
+    btn.textContent = 'SENDING...';
+    btn.disabled = true;
+
+    try {
+        await fetch("YOUR_MAKE_WEBHOOK_URL", {  // 👈 PUT YOUR WEBHOOK HERE
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        // Success UI
+        form.style.display = 'none';
+        document.getElementById('success').style.display = 'block';
+
+    } catch (err) {
+        btn.textContent = 'REQUEST BOOKING';
+        btn.disabled = false;
+
+        alert('Something went wrong — please try again or email info@visualsofbf.com directly.');
+    }
 });
 </script>
 </body>
