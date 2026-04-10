@@ -343,7 +343,7 @@ async function checkAvailability(date, duration) {
     row.style.display = 'block'; grid.innerHTML = ''; error.style.display = 'none'; loading.style.display = 'block';
     document.getElementById('timeslot-input').value = '';
     try {
-        var resp = await fetch('https://hook.eu2.make.com/2k0auqhp4c6bhykbjg9sb12ivkldmqww', {
+        var resp = await fetch('https://hook.eu2.make.com/8ay8nd2ng1cpd0esl86yyo4i6onavlld', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({type: 'availability', date: date, duration: duration})
@@ -416,7 +416,7 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     payload['Time Slot'] = document.getElementById('timeslot-input').value || 'No preference'; payload['type'] = 'booking';
     var btn = form.querySelector('.btn-main'); btn.textContent = 'SENDING...'; btn.disabled = true;
     try {
-        await fetch('https://hook.eu2.make.com/2k0auqhp4c6bhykbjg9sb12ivkldmqww', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        await fetch('https://hook.eu2.make.com/8ay8nd2ng1cpd0esl86yyo4i6onavlld', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         form.style.display = 'none'; document.getElementById('success').style.display = 'block';
     } catch (err) { btn.textContent = 'REQUEST BOOKING'; btn.disabled = false; alert('Something went wrong — please try again or email info@visualsofbf.com directly.'); }
 });
