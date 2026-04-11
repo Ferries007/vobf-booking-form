@@ -44,6 +44,16 @@
         .field input::placeholder,.field textarea::placeholder{color:var(--text-dim);font-weight:300}
         .field select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8680' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
         .field textarea{resize:vertical;min-height:76px}
+        
+        .toggle-wrap{display:flex;align-items:center;gap:10px;margin-top:6px; cursor:pointer;}
+        .toggle-switch{position:relative;width:40px;height:22px;background:var(--input);border:1px solid var(--border);border-radius:11px;transition:0.3s;}
+        .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--text-dim);border-radius:50%;transition:0.3s;}
+        .toggle-input{display:none;}
+        .toggle-input:checked + .toggle-switch{background:var(--accent);border-color:var(--accent);}
+        .toggle-input:checked + .toggle-switch::after{transform:translateX(18px);background:var(--bg);}
+        .toggle-text{font-size:14px;color:var(--text);}
+        
+        /* Custom calendar picker */
         .field input[type="date"]{display:none}
         .cal-trigger{font-family:var(--font-body);font-size:14px;color:var(--text);background:var(--input);border:1px solid var(--border);border-radius:8px;padding:11px 14px;cursor:pointer;transition:border-color .2s,box-shadow .2s;display:flex;align-items:center;justify-content:space-between;gap:10px}
         .cal-trigger:hover{border-color:var(--border-focus)}
@@ -97,18 +107,7 @@
         .footer p{font-size:11px;color:var(--text-dim);font-weight:300}
         .footer a{color:var(--accent);text-decoration:none}
         
-        /* Loading Spinner CSS */
-        .spinner {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid var(--text-dim);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 6px;
-            vertical-align: middle;
-        }
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--text-dim); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 6px; vertical-align: middle; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fd{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
         @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -136,10 +135,16 @@
         <input type="hidden" name="Time Slot" id="timeslot-input" value="">
         <input type="hidden" name="Time Slot Start" id="timeslot-start" value="">
         <input type="hidden" name="Time Slot End" id="timeslot-end" value="">
+        <input type="hidden" name="Presenter Piece" id="presenter-input" value="No">
         
         <div class="section-label">Property Details</div>
         <div class="row">
             <div class="field"><label>Client / Agency Name <span class="req">*</span></label><input type="text" name="Client Name" required></div>
+            <div class="field"><label>Agent Name <span class="req">*</span></label><input type="text" name="Agent Name" required placeholder="e.g. Sarah"></div>
+        </div>
+        
+        <div class="row">
+            <div class="field"><label>Agent Email <span class="req">*</span></label><input type="email" name="Agent Email" required placeholder="agent@agency.com"></div>
             <div class="field"><label>Package <span class="req">*</span></label>
                 <select name="Package" id="pkg-select" required>
                     <option value="" disabled selected>Select package</option>
@@ -151,29 +156,35 @@
                 </select>
             </div>
         </div>
-        
+
         <div class="row">
-            <div class="field"><label>Agent Name <span class="req">*</span></label><input type="text" name="Agent Name" required placeholder="e.g. Sarah"></div>
-            <div class="field"><label>Agent Email <span class="req">*</span></label><input type="email" name="Agent Email" required placeholder="agent@agency.com"></div>
+            <div class="field">
+                <label>Add Presenter Piece (+£20)</label>
+                <span class="hint">Agent mic'd up speaking to camera</span>
+                <label class="toggle-wrap">
+                    <input type="checkbox" class="toggle-input" id="presenter-toggle">
+                    <div class="toggle-switch"></div>
+                    <span class="toggle-text">Yes</span>
+                </label>
+            </div>
+            <div class="field"><label>Number of Bedrooms <span class="req">*</span></label><span class="hint"> </span>
+                <select name="Bedrooms" required><option value="" disabled selected>Select</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option></select>
+            </div>
         </div>
 
         <div class="row full">
-            <div class="field"><label>Property Address <span class="req">*</span></label><textarea name="Property Address" required placeholder="Full property address including postcode"></textarea></div>
+            <div class="field"><label>Property Address <span class="req">*</span></label>
+                <input type="text" id="property-address" name="Property Address" required placeholder="Start typing address...">
+            </div>
         </div>
         
         <div class="row">
             <div class="field"><label>Homeowner Name <span class="req">*</span></label><input type="text" name="Homeowner Name" required placeholder="e.g. Emma"></div>
-            <div class="field"><label>Homeowner Email <span class="req">*</span></label><span class="hint">We’ll send them a heads-up before the shoot</span><input type="email" name="Homeowner Email" required placeholder="homeowner@email.com"></div>
+            <div class="field"><label>Homeowner Phone <span class="req">*</span></label><input type="tel" name="Homeowner Phone" required placeholder="07..."></div>
         </div>
         
         <div class="row">
-            <div class="field"><label>Number of Bedrooms <span class="req">*</span></label>
-                <select name="Bedrooms" required><option value="" disabled selected>Select</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option></select>
-            </div>
-            <div class="field" style="visibility:hidden"></div>
-        </div>
-        
-        <div class="row full">
+            <div class="field"><label>Homeowner Email <span class="req">*</span></label><span class="hint">We’ll send them a heads-up before the shoot</span><input type="email" name="Homeowner Email" required placeholder="homeowner@email.com"></div>
             <div class="field">
                 <label>Preferred Shoot Date <span class="req">*</span></label>
                 <input type="hidden" name="Preferred Date" id="date-picker" required>
@@ -193,6 +204,7 @@
                 </div>
             </div>
         </div>
+        
         <div class="row full" id="timeslot-row" style="display:none">
             <div class="field">
                 <label>Preferred Time Slot <span class="req">*</span></label>
@@ -202,15 +214,59 @@
                 <div id="pkg-hint">Please select a package first to see available time slots.</div>
             </div>
         </div>
+        
         <div class="gap"></div>
         <div class="section-label">Access Details</div>
-        <div class="row">
-            <div class="field"><label>Key Holder Name <span class="req">*</span></label><input type="text" name="Key Holder Name" required></div>
-            <div class="field"><label>Key Holder Phone <span class="req">*</span></label><input type="tel" name="Key Holder Phone" required></div>
-        </div>
+        
         <div class="row full">
-            <div class="field"><label>Special Instructions</label><span class="hint">e.g. parking, alarm codes, rooms to highlight</span><textarea name="Special Instructions" placeholder="Anything we should know before the shoot"></textarea></div>
+            <div class="field">
+                <label>How will Brandon access the property? <span class="req">*</span></label>
+                <select name="Access Type" id="access-type" required>
+                    <option value="" disabled selected>Select access method</option>
+                    <option value="Meeting">Meeting someone at the property</option>
+                    <option value="Pickup">Key Pickup</option>
+                    <option value="Lockbox">Lockbox at the property</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
         </div>
+
+        <div id="access-meeting" style="display:none; flex-direction:column; gap:14px; margin-bottom:14px;">
+            <div class="row full">
+                <div class="field">
+                    <label>Who is meeting him? <span class="req">*</span></label>
+                    <select name="Meeting Who" id="meeting-who">
+                        <option value="The Homeowner" selected>The Homeowner</option>
+                        <option value="The Agent">The Agent</option>
+                        <option value="Someone Else">Someone Else</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row" id="meeting-someone" style="display:none;">
+                <div class="field"><label>Contact Name <span class="req">*</span></label><input type="text" name="Meeting Name" placeholder="Name"></div>
+                <div class="field"><label>Contact Phone <span class="req">*</span></label><input type="tel" name="Meeting Phone" placeholder="Phone"></div>
+            </div>
+        </div>
+
+        <div id="access-pickup" style="display:none; margin-bottom:14px;">
+            <div class="row full" style="margin-bottom:14px;">
+                <div class="field"><label>Pickup Address <span class="req">*</span></label><input type="text" id="pickup-address" name="Pickup Address" placeholder="Start typing pickup location..."></div>
+            </div>
+            <div class="row">
+                <div class="field"><label>Who holds the keys? <span class="req">*</span></label><input type="text" name="Pickup Name" placeholder="e.g. Branch Receptionist"></div>
+                <div class="field"><label>Pickup Phone <span class="req">*</span></label><input type="tel" name="Pickup Phone" placeholder="Branch Phone"></div>
+            </div>
+        </div>
+
+        <div id="access-lockbox" class="row" style="display:none; margin-bottom:14px;">
+            <div class="field"><label>Lockbox Code <span class="req">*</span></label><input type="text" name="Lockbox Code" placeholder="e.g. 1234"></div>
+            <div class="field"><label>Exact Location <span class="req">*</span></label><input type="text" name="Lockbox Location" placeholder="e.g. Side gate fence"></div>
+        </div>
+
+        <div id="access-other" class="row full" style="display:none; margin-bottom:14px;">
+            <div class="field"><label>Instructions <span class="req">*</span></label><span class="hint">Please explain any other access arrangements</span><textarea name="Other Instructions" placeholder="Type here..."></textarea></div>
+        </div>
+
         <div class="submit-area">
             <button type="submit" class="btn-main">Request Booking</button>
             <div class="turnaround">
@@ -226,8 +282,35 @@
     </div>
     <div class="footer"><p>Visuals of BF · <a href="https://www.visualsofbf.com">www.visualsofbf.com</a> · info@visualsofbf.com</p></div>
 </div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDV0HpEXZJlvlZjHb0s81yamA2EtI0etG4&libraries=places&callback=initAutocomplete" async defer></script>
+
 <script>
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec"; 
+
+// Initialize Google Maps Autocomplete for UK Addresses
+function initAutocomplete() {
+    new google.maps.places.Autocomplete(document.getElementById('property-address'), { types: ['address'], componentRestrictions: {country: 'uk'} });
+    new google.maps.places.Autocomplete(document.getElementById('pickup-address'), { types: ['address'], componentRestrictions: {country: 'uk'} });
+}
+
+// Presenter Piece Toggle Logic
+document.getElementById('presenter-toggle').addEventListener('change', function() {
+    document.getElementById('presenter-input').value = this.checked ? "Yes" : "No";
+});
+
+// Dynamic Access UI Logic
+document.getElementById('access-type').addEventListener('change', function() {
+    var val = this.value;
+    document.getElementById('access-meeting').style.display = (val === 'Meeting') ? 'flex' : 'none';
+    document.getElementById('access-pickup').style.display = (val === 'Pickup') ? 'block' : 'none';
+    document.getElementById('access-lockbox').style.display = (val === 'Lockbox') ? 'flex' : 'none';
+    document.getElementById('access-other').style.display = (val === 'Other') ? 'block' : 'none';
+});
+
+document.getElementById('meeting-who').addEventListener('change', function() {
+    document.getElementById('meeting-someone').style.display = (this.value === 'Someone Else') ? 'flex' : 'none';
+});
 
 var SLOT_TEMPLATES = {
     1: [
@@ -254,7 +337,6 @@ var MONTHS = ['January','February','March','April','May','June','July','August',
 var DAYS = ['Mo','Tu','We','Th','Fr','Sa','Su'];
 var calMonth, calYear, selectedDate = null;
 
-// Background Cache
 var prefetchPromise = null;
 var prefetchedBusyBlocks = null;
 var prefetchedStartStr = '';
@@ -272,11 +354,9 @@ function initCal() {
     calYear = now.getFullYear();
     renderCal();
     
-    // Auto-fetch 14 days of availability!
     var today = new Date();
     var twoWeeks = new Date();
     twoWeeks.setDate(today.getDate() + 14);
-    
     prefetchedStartStr = today.toISOString().split('T')[0];
     prefetchedEndStr = twoWeeks.toISOString().split('T')[0];
     
@@ -415,16 +495,16 @@ async function checkAvailability(date, duration) {
         
         if (!isWithinCache) {
             var funnyMsgs = [
-                "Consulting the crystal ball... give us a sec 🔮",
-                "Bribing the calendar for free time... hold tight! 💸",
-                "Running down the hall to check the diary... back in a flash! 🏃‍♂️",
-                "Firing up the time machine to check future slots... ⏱️",
-                "Asking the schedule nicely to open up... 🙏",
-                "Untangling the booking wires... almost there! 🔌",
-                "Sifting through the sands of time... ⏳",
-                "Loading calendar magic... please hold! ✨",
-                "Waking up the calendar gnomes... 🧙‍♂️",
-                "Negotiating with time itself... one moment! 🕰️"
+                "Consulting the crystal ball... give us a sec \uD83D\uDD2E",
+                "Bribing the calendar for free time... hold tight! \uD83D\uDCB8",
+                "Running down the hall to check the diary... back in a flash! \uD83C\uDFC3\u200D\u2642\uFE0F",
+                "Firing up the time machine to check future slots... \u23F1\uFE0F",
+                "Asking the schedule nicely to open up... \uD83D\uDE4F",
+                "Untangling the booking wires... almost there! \uD83D\uDD0C",
+                "Sifting through the sands of time... \u23F3",
+                "Loading calendar magic... please hold! \u2728",
+                "Waking up the calendar gnomes... \uD83E\uDDD9\u200D\u2642\uFE0F",
+                "Negotiating with time itself... one moment! \uD83D\uDD70\uFE0F"
             ];
             var randMsg = funnyMsgs[Math.floor(Math.random() * funnyMsgs.length)];
             loading.innerHTML = '<span class="spinner"></span> ' + randMsg;
