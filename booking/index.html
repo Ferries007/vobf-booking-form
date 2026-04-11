@@ -77,7 +77,6 @@
         .cal-grid .cal-day.disabled{color:var(--text-dim);opacity:.25;cursor:not-allowed}
         .cal-grid .cal-day.weekend{color:var(--text-dim);opacity:.2;cursor:not-allowed}
         .cal-grid .cal-day.empty{cursor:default}
-        .gap{margin-top:32px}
         
         .timeslot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:6px}
         .timeslot{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:var(--font-body);font-size:13px;color:var(--text);cursor:pointer;transition:all .2s;text-align:center;font-weight:400;display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -107,7 +106,16 @@
         .footer p{font-size:11px;color:var(--text-dim);font-weight:300}
         .footer a{color:var(--accent);text-decoration:none}
         
+        /* Loading Spinner CSS */
         .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--text-dim); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 6px; vertical-align: middle; }
+        
+        /* Google Maps Autocomplete CSS Fix */
+        .pac-container { z-index: 99999 !important; background-color: var(--input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+        .pac-item { color: var(--text-mid); border-top: 1px solid var(--border); padding: 8px 14px; cursor: pointer; }
+        .pac-item:hover { background-color: var(--glow); color: var(--accent); }
+        .pac-item-query { color: var(--text); font-weight: 500; }
+        
+        .gap{margin-top:32px}
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fd{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
         @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -214,7 +222,6 @@
                 <div id="pkg-hint">Please select a package first to see available time slots.</div>
             </div>
         </div>
-        
         <div class="gap"></div>
         <div class="section-label">Access Details</div>
         
@@ -265,6 +272,10 @@
 
         <div id="access-other" class="row full" style="display:none; margin-bottom:14px;">
             <div class="field"><label>Instructions <span class="req">*</span></label><span class="hint">Please explain any other access arrangements</span><textarea name="Other Instructions" placeholder="Type here..."></textarea></div>
+        </div>
+
+        <div class="row full">
+            <div class="field"><label>Additional Notes</label><span class="hint">Anything else we should know?</span><textarea name="Additional Notes" placeholder="Leave blank if none"></textarea></div>
         </div>
 
         <div class="submit-area">
@@ -339,6 +350,7 @@ var calMonth, calYear, selectedDate = null;
 
 var prefetchPromise = null;
 var prefetchedBusyBlocks = null;
+var prefetchedHolidayBlocks = null;
 var prefetchedStartStr = '';
 var prefetchedEndStr = '';
 
@@ -362,7 +374,10 @@ function initCal() {
     
     prefetchPromise = fetch(GOOGLE_SCRIPT_URL + '?action=checkAvailabilityRange&start=' + prefetchedStartStr + '&end=' + prefetchedEndStr)
         .then(res => res.json())
-        .then(data => { if (data && data.busy) { prefetchedBusyBlocks = data.busy; } })
+        .then(data => { 
+            if (data && data.busy) { prefetchedBusyBlocks = data.busy; } 
+            if (data && data.holidays) { prefetchedHolidayBlocks = data.holidays; } 
+        })
         .catch(e => console.log('Prefetch failed'));
 }
 
@@ -482,6 +497,7 @@ async function checkAvailability(date, duration) {
         var isWithinCache = (dateObj >= startObj && dateObj <= endObj);
         
         var busyBlocks = [];
+        var holidayBlocks = [];
         
         if (isWithinCache) {
             if (!prefetchedBusyBlocks && prefetchPromise) {
@@ -490,21 +506,24 @@ async function checkAvailability(date, duration) {
             }
             if (prefetchedBusyBlocks) {
                 prefetchedBusyBlocks.forEach(function(b) { busyBlocks.push({start: new Date(b.start), end: new Date(b.end)}); });
+                if (prefetchedHolidayBlocks) {
+                    prefetchedHolidayBlocks.forEach(function(h) { holidayBlocks.push({start: new Date(h.start), end: new Date(h.end)}); });
+                }
             } else { isWithinCache = false; }
         }
         
         if (!isWithinCache) {
             var funnyMsgs = [
-                "Consulting the crystal ball... give us a sec \uD83D\uDD2E",
-                "Bribing the calendar for free time... hold tight! \uD83D\uDCB8",
-                "Running down the hall to check the diary... back in a flash! \uD83C\uDFC3\u200D\u2642\uFE0F",
-                "Firing up the time machine to check future slots... \u23F1\uFE0F",
-                "Asking the schedule nicely to open up... \uD83D\uDE4F",
-                "Untangling the booking wires... almost there! \uD83D\uDD0C",
-                "Sifting through the sands of time... \u23F3",
-                "Loading calendar magic... please hold! \u2728",
-                "Waking up the calendar gnomes... \uD83E\uDDD9\u200D\u2642\uFE0F",
-                "Negotiating with time itself... one moment! \uD83D\uDD70\uFE0F"
+                "Consulting the crystal ball... give us a sec &#128302;",
+                "Bribing the calendar for free time... hold tight! &#128184;",
+                "Running down the hall to check the diary... back in a flash! &#127939;&#8205;&#9794;&#65039;",
+                "Firing up the time machine to check future slots... &#9201;&#65039;",
+                "Asking the schedule nicely to open up... &#128591;",
+                "Untangling the booking wires... almost there! &#128268;",
+                "Sifting through the sands of time... &#9203;",
+                "Loading calendar magic... please hold! &#10024;",
+                "Waking up the calendar gnomes... &#129497;&#8205;&#9794;&#65039;",
+                "Negotiating with time itself... one moment! &#128336;&#65039;"
             ];
             var randMsg = funnyMsgs[Math.floor(Math.random() * funnyMsgs.length)];
             loading.innerHTML = '<span class="spinner"></span> ' + randMsg;
@@ -513,6 +532,9 @@ async function checkAvailability(date, duration) {
             var raw = await resp.json();
             if (raw && Array.isArray(raw.busy)) {
                 raw.busy.forEach(function(b) { busyBlocks.push({start: new Date(b.start), end: new Date(b.end)}); });
+            }
+            if (raw && Array.isArray(raw.holidays)) {
+                raw.holidays.forEach(function(h) { holidayBlocks.push({start: new Date(h.start), end: new Date(h.end)}); });
             }
         }
         loading.style.display = 'none';
@@ -527,7 +549,12 @@ async function checkAvailability(date, duration) {
 
         var allBlocked = slots.every(function(s) { return !s.available; });
         if (allBlocked) {
-            error.textContent = 'Fully booked on this date — please choose another day.';
+            var isHoliday = holidayBlocks.some(function(h) { return dateObj >= h.start && dateObj <= h.end; });
+            if (isHoliday) {
+                error.innerHTML = "I'm off catching some much-needed sunlight! &#127958;&#65039; (Or maybe just drinking a cocktail). Please pick a different date!";
+            } else {
+                error.textContent = 'Fully booked on this date — please choose another day.';
+            }
             error.style.display = 'block';
             return;
         }
