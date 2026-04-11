@@ -42,6 +42,13 @@
         .submit-area{margin-top:28px;text-align:center}
         .btn-main{font-family:var(--font-display);font-size:18px;letter-spacing:3px;color:var(--bg);background:linear-gradient(135deg,var(--accent),var(--accent-hover));border:none;border-radius:10px;padding:15px 48px;cursor:pointer;transition:transform .2s,box-shadow .2s;width:100%;max-width:300px}
         .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--glow)}
+        
+        /* Success Message Styles */
+        .success-msg{display:none;text-align:center;padding:52px 24px;background:var(--card);border:1px solid var(--border);border-radius:14px;animation:fu .5s ease forwards}
+        .success-msg .tick svg{width:56px;height:56px;stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+        .success-msg h3{font-family:var(--font-display);font-size:28px;color:var(--accent);margin:18px 0 10px;letter-spacing:2px}
+        .success-msg p{color:var(--text-mid);font-size:14px;font-weight:300;line-height:1.7;margin-bottom:24px}
+        
         .info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:32px 28px;margin-top:20px;text-align:center;opacity:0;animation:fu .5s ease .3s forwards}
         .info-card h2{font-family:var(--font-display);font-size:24px;letter-spacing:2px;margin-bottom:10px;color:var(--text)}
         .info-card p{font-size:13px;color:var(--text-mid);font-weight:300;line-height:1.7;max-width:500px;margin:0 auto 20px}
@@ -62,7 +69,11 @@
         <p>Complete this short form to get set up as a client. Once submitted, you'll be ready to start booking shoots.</p>
     </div>
     <div class="divider"></div>
-   <form class="form-card" action="https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec" method="POST" enctype="multipart/form-data">
+    
+    <script>var submitted = false;</script>
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) { document.getElementById('onboarding-form').style.display='none'; document.getElementById('info-card').style.display='none'; document.getElementById('success-msg').style.display='block'; window.scrollTo(0,0); }"></iframe>
+
+    <form id="onboarding-form" class="form-card" target="hidden_iframe" action="https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec" method="POST" enctype="multipart/form-data" onsubmit="submitted=true; var btn = this.querySelector('.btn-main'); btn.textContent='UPLOADING...'; btn.style.opacity='0.7'; btn.style.cursor='not-allowed';">
         <input type="hidden" name="formType" value="onboarding">
         <div class="section-label">Contact Details</div>
         <div class="row"><div class="field"><label>Business / Agency Name <span class="req">*</span></label><input type="text" name="Business Name" required></div><div class="field"><label>Main Contact Name <span class="req">*</span></label><input type="text" name="Contact Name" required></div></div>
@@ -80,7 +91,15 @@
         <div class="row full"><div class="field"><label>Logo Video / Sting</label><span class="hint">Upload a logo animation or intro video if you have one (MP4, MOV — max 5MB)</span><input type="file" name="Logo Video" accept="video/mp4,video/quicktime,.mov,.mp4" style="font-family:var(--font-body);font-size:13px;color:var(--text-mid);background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;width:100%;cursor:pointer"></div></div>
         <div class="submit-area"><button type="submit" class="btn-main">Submit</button></div>
     </form>
-    <div class="info-card">
+    
+    <div class="success-msg" id="success-msg">
+        <div class="tick"><svg viewBox="0 0 24 20"><polyline points="2,10 8,16 22,2"/></svg></div>
+        <h3>Welcome Aboard!</h3>
+        <p>Your details and brand assets have been securely uploaded.<br>You are now officially set up and ready to book your first shoot.</p>
+        <a href="http://clients.visualsofbf.com/booking" class="btn-outline">Go to Booking Form →</a>
+    </div>
+
+    <div class="info-card" id="info-card">
         <h2>How to Book a Shoot</h2>
         <p>Once you're set up, booking a property shoot is simple. Fill in our Shoot Booking Form with the property details and your preferred date. We'll confirm availability within 24 hours, and your media will be delivered within 48 hours of the shoot.</p>
         <a href="http://clients.visualsofbf.com/booking" class="btn-outline">Go to Booking Form →</a>
