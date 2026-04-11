@@ -14,7 +14,6 @@
         body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased}
         body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
         
-        /* Glassmorphism Classes */
         .glass-panel { background: var(--card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 16px; }
         .glass-input { background: var(--input); border: 1px solid var(--border); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         
@@ -43,6 +42,7 @@
         .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
         .row.full{grid-template-columns:1fr}
         @media(max-width:520px){.row{grid-template-columns:1fr}}
+        .row.three{grid-template-columns: 100px 1fr;}
         .field{display:flex;flex-direction:column;gap:5px}
         .field label{font-size:12px;font-weight:500;color:var(--text-mid);letter-spacing:.4px;text-transform:uppercase}
         .field label .req{color:var(--accent)}
@@ -55,7 +55,6 @@
         .field select option { background-color: #1a1a1a; color: #fff; }
         .field textarea{resize:vertical;min-height:80px}
         
-        /* Apple-style Smooth Toggles */
         .toggle-wrap{display:flex;align-items:center;gap:12px;margin-top:6px; cursor:pointer;}
         .toggle-switch{position:relative;width:44px;height:24px;border-radius:12px;}
         .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%; transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
@@ -64,7 +63,6 @@
         .toggle-input:checked + .toggle-switch::after{transform:translateX(20px);}
         .toggle-text{font-size:14px;color:var(--text); font-weight: 400;}
         
-        /* Custom Glass Calendar */
         .field input[type="date"]{display:none}
         .cal-trigger{font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px}
         .cal-trigger:hover{border-color:var(--border-focus)}
@@ -91,7 +89,7 @@
         .cal-grid .cal-day.weekend{color:var(--text-dim);opacity:.2;cursor:not-allowed}
         .cal-grid .cal-day.empty{cursor:default}
         
-        .timeslot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:8px}
+        .timeslot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:8px}
         .timeslot{padding:14px;font-family:var(--font-body);font-size:13px;color:var(--text);cursor:pointer;text-align:center;font-weight:400;display:flex;flex-direction:column;align-items:center;gap:4px}
         .timeslot .slot-time{font-weight:500;font-size:14px}
         .timeslot .slot-label{font-size:10px;color:var(--text-dim);font-weight:300;text-transform:uppercase;letter-spacing:.5px}
@@ -122,15 +120,12 @@
         .footer p{font-size:12px;color:var(--text-dim);font-weight:300}
         .footer a{color:var(--accent);text-decoration:none}
         
-        /* Loading Spinner CSS */
         .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--text-dim); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 6px; vertical-align: middle; }
-        
-        /* Google Maps Autocomplete Glass Fix */
-        .pac-container { z-index: 99999 !important; background: rgba(20, 20, 20, 0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; color: var(--text) !important; box-shadow: 0 16px 48px rgba(0,0,0,0.5) !important; padding: 4px 0; }
+        .pac-container { z-index: 99999 !important; background: rgba(20, 20, 20, 0.85) !important; backdrop-filter: blur(20px) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; color: var(--text) !important; box-shadow: 0 16px 48px rgba(0,0,0,0.5) !important; padding: 4px 0; }
         .pac-item { color: var(--text-mid) !important; border-top: 1px solid rgba(255,255,255,0.05) !important; padding: 10px 16px !important; cursor: pointer !important; transition: background 0.2s; }
         .pac-item:hover { background-color: var(--glow) !important; }
         .pac-item-query { color: var(--text) !important; font-weight: 500 !important; }
-        .pac-logo::after { display: none !important; } /* Clean up google logo padding */
+        .pac-logo::after { display: none !important; } 
         
         .gap{margin-top:32px}
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -211,10 +206,9 @@
             <div class="field" style="visibility:hidden"></div>
         </div>
 
-        <div class="row full">
-            <div class="field"><label>Property Address <span class="req">*</span></label>
-                <input type="text" class="glass-input" id="property-address" name="Property Address" required placeholder="Start typing address...">
-            </div>
+        <div class="row three">
+            <div class="field"><label>Flat / Unit</label><input type="text" class="glass-input" name="Flat Number" placeholder="e.g. 3/1"></div>
+            <div class="field"><label>Property Address <span class="req">*</span></label><input type="text" class="glass-input" id="property-address" name="Property Address" required placeholder="Start typing address or postcode..."></div>
         </div>
         
         <div class="row">
@@ -234,9 +228,9 @@
                     </div>
                     <div class="cal-dropdown glass-panel" id="cal-dropdown">
                         <div class="cal-nav">
-                            <button type="button" onclick="calNav(-1)">&#8249;</button>
+                            <button type="button" onclick="calNav(-1)">‹</button>
                             <span class="cal-month" id="cal-month-label"></span>
-                            <button type="button" onclick="calNav(1)">&#8250;</button>
+                            <button type="button" onclick="calNav(1)">›</button>
                         </div>
                         <div class="cal-grid" id="cal-grid"></div>
                     </div>
@@ -330,17 +324,14 @@
 <script>
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec"; 
 
+// Modified Maps init to allow postcodes/broader searches
 function initAutocomplete() {
-    new google.maps.places.Autocomplete(document.getElementById('property-address'), { types: ['address'], componentRestrictions: {country: 'uk'} });
-    new google.maps.places.Autocomplete(document.getElementById('pickup-address'), { types: ['address'], componentRestrictions: {country: 'uk'} });
+    new google.maps.places.Autocomplete(document.getElementById('property-address'), { componentRestrictions: {country: 'uk'} });
+    new google.maps.places.Autocomplete(document.getElementById('pickup-address'), { componentRestrictions: {country: 'uk'} });
 }
 
-document.getElementById('presenter-toggle').addEventListener('change', function() {
-    document.getElementById('presenter-input').value = this.checked ? "Yes" : "No";
-});
-document.getElementById('teaser-toggle').addEventListener('change', function() {
-    document.getElementById('teaser-input').value = this.checked ? "Yes" : "No";
-});
+document.getElementById('presenter-toggle').addEventListener('change', function() { document.getElementById('presenter-input').value = this.checked ? "Yes" : "No"; });
+document.getElementById('teaser-toggle').addEventListener('change', function() { document.getElementById('teaser-input').value = this.checked ? "Yes" : "No"; });
 
 document.getElementById('access-type').addEventListener('change', function() {
     var val = this.value;
@@ -354,11 +345,20 @@ document.getElementById('meeting-who').addEventListener('change', function() {
     document.getElementById('meeting-someone').style.display = (this.value === 'Someone Else') ? 'flex' : 'none';
 });
 
-var SLOT_TEMPLATES = {
-    1: [{start:'09:00',end:'10:00',label:'Morning',time:'9:00 – 10:00'}, {start:'11:00',end:'12:00',label:'Late Morning',time:'11:00 – 12:00'}, {start:'13:00',end:'14:00',label:'Early Afternoon',time:'1:00 – 2:00'}, {start:'15:00',end:'16:00',label:'Afternoon',time:'3:00 – 4:00'}, {start:'17:00',end:'18:00',label:'Late Afternoon',time:'5:00 – 6:00'}],
-    2: [{start:'09:00',end:'11:00',label:'Morning',time:'9:00 – 11:00'}, {start:'11:00',end:'13:00',label:'Midday',time:'11:00 – 1:00'}, {start:'13:00',end:'15:00',label:'Early Afternoon',time:'1:00 – 3:00'}, {start:'15:00',end:'17:00',label:'Afternoon',time:'3:00 – 5:00'}],
-    3: [{start:'09:00',end:'12:00',label:'Morning',time:'9:00 – 12:00'}, {start:'11:00',end:'14:00',label:'Midday',time:'11:00 – 2:00'}, {start:'14:00',end:'17:00',label:'Afternoon',time:'2:00 – 5:00'}]
-};
+// HOURLY SLOT GENERATOR
+function generateHourlySlots(duration) {
+    let slots = [];
+    for (let h = 9; h <= 18 - duration; h++) {
+        let startStr = String(h).padStart(2, '0') + ':00';
+        let endStr = String(h + duration).padStart(2, '0') + ':00';
+        let ampmStart = h >= 12 ? 'PM' : 'AM';
+        let ampmEnd = (h + duration) >= 12 ? 'PM' : 'AM';
+        let dispStart = (h > 12 ? h - 12 : h) + ':00 ' + ampmStart;
+        let dispEnd = ((h + duration) > 12 ? (h + duration) - 12 : (h + duration)) + ':00 ' + ampmEnd;
+        slots.push({start: startStr, end: endStr, label: 'Hourly Slot', time: dispStart + ' – ' + dispEnd});
+    }
+    return slots;
+}
 
 var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 var DAYS = ['Mo','Tu','We','Th','Fr','Sa','Su'];
@@ -366,135 +366,77 @@ var calMonth, calYear, selectedDate = null;
 var prefetchPromise = null, prefetchedBusyBlocks = null, prefetchedHolidayBlocks = null, prefetchedStartStr = '', prefetchedEndStr = '';
 
 function getSelectedDuration() {
-    var sel = document.getElementById('pkg-select');
-    if (!sel.value) return 0;
+    var sel = document.getElementById('pkg-select'); if (!sel.value) return 0;
     return parseInt(sel.options[sel.selectedIndex].getAttribute('data-duration')) || 2;
 }
 
 function initCal() {
-    var now = new Date();
-    calMonth = now.getMonth();
-    calYear = now.getFullYear();
-    renderCal();
-    
-    var today = new Date();
-    var twoWeeks = new Date();
-    twoWeeks.setDate(today.getDate() + 14);
-    prefetchedStartStr = today.toISOString().split('T')[0];
-    prefetchedEndStr = twoWeeks.toISOString().split('T')[0];
-    
+    var now = new Date(); calMonth = now.getMonth(); calYear = now.getFullYear(); renderCal();
+    var today = new Date(); var twoWeeks = new Date(); twoWeeks.setDate(today.getDate() + 14);
+    prefetchedStartStr = today.toISOString().split('T')[0]; prefetchedEndStr = twoWeeks.toISOString().split('T')[0];
     prefetchPromise = fetch(GOOGLE_SCRIPT_URL + '?action=checkAvailabilityRange&start=' + prefetchedStartStr + '&end=' + prefetchedEndStr)
-        .then(res => res.json())
-        .then(data => { 
+        .then(res => res.json()).then(data => { 
             if (data && data.busy) { prefetchedBusyBlocks = data.busy; } 
             if (data && data.holidays) { prefetchedHolidayBlocks = data.holidays; } 
         }).catch(e => console.log('Prefetch failed'));
 }
 
-function calNav(dir) {
-    calMonth += dir;
-    if (calMonth > 11) { calMonth = 0; calYear++; }
-    if (calMonth < 0) { calMonth = 11; calYear--; }
-    renderCal();
-}
+function calNav(dir) { calMonth += dir; if (calMonth > 11) { calMonth = 0; calYear++; } if (calMonth < 0) { calMonth = 11; calYear--; } renderCal(); }
 
 function toggleCal() {
-    var dd = document.getElementById('cal-dropdown');
-    var trigger = document.getElementById('cal-trigger');
-    if (dd.classList.contains('open')) {
-        dd.classList.remove('open');
-        setTimeout(() => trigger.classList.remove('active'), 150); // slight delay for visual smoothness
-    } else {
-        dd.classList.add('open');
-        trigger.classList.add('active');
-        renderCal();
-    }
+    var dd = document.getElementById('cal-dropdown'); var trigger = document.getElementById('cal-trigger');
+    if (dd.classList.contains('open')) { dd.classList.remove('open'); setTimeout(() => trigger.classList.remove('active'), 150); } 
+    else { dd.classList.add('open'); trigger.classList.add('active'); renderCal(); }
 }
 
 function renderCal() {
     document.getElementById('cal-month-label').textContent = MONTHS[calMonth] + ' ' + calYear;
-    var grid = document.getElementById('cal-grid');
-    grid.innerHTML = '';
-    DAYS.forEach(function(d) {
-        var el = document.createElement('div'); el.className = 'cal-day-header'; el.textContent = d; grid.appendChild(el);
-    });
-    var firstDay = new Date(calYear, calMonth, 1).getDay();
-    var startOffset = (firstDay === 0) ? 6 : firstDay - 1;
-    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    var today = new Date(); today.setHours(0,0,0,0);
-    for (var i = 0; i < startOffset; i++) {
-        var empty = document.createElement('div'); empty.className = 'cal-day empty'; grid.appendChild(empty);
-    }
+    var grid = document.getElementById('cal-grid'); grid.innerHTML = '';
+    DAYS.forEach(function(d) { var el = document.createElement('div'); el.className = 'cal-day-header'; el.textContent = d; grid.appendChild(el); });
+    var firstDay = new Date(calYear, calMonth, 1).getDay(); var startOffset = (firstDay === 0) ? 6 : firstDay - 1;
+    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate(); var today = new Date(); today.setHours(0,0,0,0);
+    for (var i = 0; i < startOffset; i++) { var empty = document.createElement('div'); empty.className = 'cal-day empty'; grid.appendChild(empty); }
     for (var d = 1; d <= daysInMonth; d++) {
         var cell = document.createElement('div'); cell.className = 'cal-day'; cell.textContent = d;
-        var cellDate = new Date(calYear, calMonth, d);
-        var dow = cellDate.getDay();
+        var cellDate = new Date(calYear, calMonth, d); var dow = cellDate.getDay();
         if (dow === 0 || dow === 6) { cell.classList.add('weekend'); grid.appendChild(cell); continue; }
         if (cellDate <= today) { cell.classList.add('disabled'); grid.appendChild(cell); continue; }
         if (selectedDate && cellDate.toDateString() === selectedDate.toDateString()) cell.classList.add('selected');
-        (function(date, day) { cell.onclick = function() { pickDate(date, day); }; })(cellDate, d);
-        grid.appendChild(cell);
+        (function(date, day) { cell.onclick = function() { pickDate(date, day); }; })(cellDate, d); grid.appendChild(cell);
     }
 }
 
 function pickDate(dateObj, day) {
     selectedDate = dateObj;
-    var y = dateObj.getFullYear();
-    var m = String(dateObj.getMonth() + 1).padStart(2, '0');
-    var dd = String(day).padStart(2, '0');
-    var formatted = y + '-' + m + '-' + dd;
-    document.getElementById('date-picker').value = formatted;
-    var display = document.getElementById('cal-display');
-    var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var y = dateObj.getFullYear(); var m = String(dateObj.getMonth() + 1).padStart(2, '0'); var dd = String(day).padStart(2, '0');
+    var formatted = y + '-' + m + '-' + dd; document.getElementById('date-picker').value = formatted;
+    var display = document.getElementById('cal-display'); var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     display.textContent = dayNames[dateObj.getDay()] + ' ' + day + ' ' + MONTHS[dateObj.getMonth()] + ' ' + y;
-    display.classList.remove('empty');
-    toggleCal();
+    display.classList.remove('empty'); toggleCal();
     var dur = getSelectedDuration();
-    if (!dur) {
-        document.getElementById('timeslot-row').style.display = 'block';
-        document.getElementById('timeslots').innerHTML = '';
-        document.getElementById('slot-error').style.display = 'none';
-        document.getElementById('pkg-hint').style.display = 'block';
-        return;
-    }
-    document.getElementById('pkg-hint').style.display = 'none';
-    checkAvailability(formatted, dur);
+    if (!dur) { document.getElementById('timeslot-row').style.display = 'block'; document.getElementById('timeslots').innerHTML = ''; document.getElementById('slot-error').style.display = 'none'; document.getElementById('pkg-hint').style.display = 'block'; return; }
+    document.getElementById('pkg-hint').style.display = 'none'; checkAvailability(formatted, dur);
 }
 
 document.addEventListener('click', function(e) {
     var wrap = document.querySelector('.cal-wrap');
-    if (wrap && !wrap.contains(e.target)) {
-        document.getElementById('cal-dropdown').classList.remove('open');
-        document.getElementById('cal-trigger').classList.remove('active');
-    }
+    if (wrap && !wrap.contains(e.target)) { document.getElementById('cal-dropdown').classList.remove('open'); document.getElementById('cal-trigger').classList.remove('active'); }
 });
 
 document.getElementById('pkg-select').addEventListener('change', function() {
-    if(this.value.includes("Social Media Teaser")) {
-        document.getElementById('teaser-toggle-container').style.display = 'none';
-        document.getElementById('teaser-toggle').checked = false;
-        document.getElementById('teaser-input').value = "No";
-    } else {
-        document.getElementById('teaser-toggle-container').style.display = 'flex';
-    }
+    if(this.value.includes("Social Media Teaser")) { document.getElementById('teaser-toggle-container').style.display = 'none'; document.getElementById('teaser-toggle').checked = false; document.getElementById('teaser-input').value = "No"; } 
+    else { document.getElementById('teaser-toggle-container').style.display = 'flex'; }
     var dateVal = document.getElementById('date-picker').value;
     if (dateVal) { var dur = getSelectedDuration(); if (dur) { document.getElementById('pkg-hint').style.display = 'none'; checkAvailability(dateVal, dur); } }
 });
 
 document.querySelectorAll('.pkg').forEach(function(card) {
     card.addEventListener('click', function() {
-        document.querySelectorAll('.pkg').forEach(function(c) { c.classList.remove('selected'); });
-        card.classList.add('selected');
-        var sel = document.getElementById('pkg-select');
-        var val = card.getAttribute('data-package');
+        document.querySelectorAll('.pkg').forEach(function(c) { c.classList.remove('selected'); }); card.classList.add('selected');
+        var sel = document.getElementById('pkg-select'); var val = card.getAttribute('data-package');
         for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === val) { sel.selectedIndex = i; break; } }
-        if(val.includes("Social Media Teaser")) {
-            document.getElementById('teaser-toggle-container').style.display = 'none';
-            document.getElementById('teaser-toggle').checked = false;
-            document.getElementById('teaser-input').value = "No";
-        } else {
-            document.getElementById('teaser-toggle-container').style.display = 'flex';
-        }
+        if(val.includes("Social Media Teaser")) { document.getElementById('teaser-toggle-container').style.display = 'none'; document.getElementById('teaser-toggle').checked = false; document.getElementById('teaser-input').value = "No"; } 
+        else { document.getElementById('teaser-toggle-container').style.display = 'flex'; }
         var dateVal = document.getElementById('date-picker').value;
         if (dateVal) { var dur = parseInt(card.getAttribute('data-duration')) || 2; document.getElementById('pkg-hint').style.display = 'none'; checkAvailability(dateVal, dur); }
     });
@@ -502,75 +444,51 @@ document.querySelectorAll('.pkg').forEach(function(card) {
 
 function selectSlot(el) {
     if (el.classList.contains('unavailable')) return;
-    document.querySelectorAll('.timeslot').forEach(function(s) { s.classList.remove('active'); });
-    el.classList.add('active');
-    document.getElementById('timeslot-input').value = el.dataset.time;
-    document.getElementById('timeslot-start').value = el.dataset.start;
-    document.getElementById('timeslot-end').value = el.dataset.end;
+    document.querySelectorAll('.timeslot').forEach(function(s) { s.classList.remove('active'); }); el.classList.add('active');
+    document.getElementById('timeslot-input').value = el.dataset.time; document.getElementById('timeslot-start').value = el.dataset.start; document.getElementById('timeslot-end').value = el.dataset.end;
 }
 
 async function checkAvailability(date, duration) {
-    var row = document.getElementById('timeslot-row'); var grid = document.getElementById('timeslots');
-    var loading = document.getElementById('slot-loading'); var error = document.getElementById('slot-error');
+    var row = document.getElementById('timeslot-row'); var grid = document.getElementById('timeslots'); var loading = document.getElementById('slot-loading'); var error = document.getElementById('slot-error');
     row.style.display = 'block'; grid.innerHTML = ''; error.style.display = 'none'; loading.style.display = 'block';
-    document.getElementById('timeslot-input').value = '';
-    document.getElementById('timeslot-start').value = '';
-    document.getElementById('timeslot-end').value = '';
+    document.getElementById('timeslot-input').value = ''; document.getElementById('timeslot-start').value = ''; document.getElementById('timeslot-end').value = '';
     
     try {
-        var dateObj = new Date(date + 'T00:00:00');
-        var startObj = new Date(prefetchedStartStr + 'T00:00:00');
-        var endObj = new Date(prefetchedEndStr + 'T23:59:59');
+        var dateObj = new Date(date + 'T00:00:00'); var startObj = new Date(prefetchedStartStr + 'T00:00:00'); var endObj = new Date(prefetchedEndStr + 'T23:59:59');
         var isWithinCache = (dateObj >= startObj && dateObj <= endObj);
-        
-        var busyBlocks = [];
-        var holidayBlocks = [];
+        var busyBlocks = []; var holidayBlocks = [];
         
         if (isWithinCache) {
-            if (!prefetchedBusyBlocks && prefetchPromise) {
-                loading.innerHTML = '<span class="spinner"></span> Digging through the diary... almost there!';
-                await prefetchPromise;
-            }
+            if (!prefetchedBusyBlocks && prefetchPromise) { loading.innerHTML = '<span class="spinner"></span> Digging through the diary... almost there!'; await prefetchPromise; }
             if (prefetchedBusyBlocks) {
                 prefetchedBusyBlocks.forEach(function(b) { busyBlocks.push({start: new Date(b.start), end: new Date(b.end)}); });
-                if (prefetchedHolidayBlocks) {
-                    prefetchedHolidayBlocks.forEach(function(h) { holidayBlocks.push({start: new Date(h.start), end: new Date(h.end)}); });
-                }
+                if (prefetchedHolidayBlocks) { prefetchedHolidayBlocks.forEach(function(h) { holidayBlocks.push({start: new Date(h.start), end: new Date(h.end)}); }); }
             } else { isWithinCache = false; }
         }
         
         if (!isWithinCache) {
-            var funnyMsgs = ["Consulting the crystal ball... give us a sec &#128302;", "Bribing the calendar for free time... hold tight! &#128184;", "Running down the hall to check the diary... back in a flash! &#127939;&#8205;&#9794;&#65039;", "Firing up the time machine to check future slots... &#9201;&#65039;", "Asking the schedule nicely to open up... &#128591;", "Untangling the booking wires... almost there! &#128268;", "Sifting through the sands of time... &#9203;", "Loading calendar magic... please hold! &#10024;", "Waking up the calendar gnomes... &#129497;&#8205;&#9794;&#65039;", "Negotiating with time itself... one moment! &#128336;&#65039;"];
-            var randMsg = funnyMsgs[Math.floor(Math.random() * funnyMsgs.length)];
-            loading.innerHTML = '<span class="spinner"></span> ' + randMsg;
-            
-            var resp = await fetch(GOOGLE_SCRIPT_URL + '?action=checkAvailability&date=' + date);
-            var raw = await resp.json();
+            var funnyMsgs = ["Consulting the crystal ball... give us a sec 🔮", "Bribing the calendar for free time... hold tight! 💸", "Sifting through the sands of time... ⏳", "Loading calendar magic... please hold! ✨"];
+            loading.innerHTML = '<span class="spinner"></span> ' + funnyMsgs[Math.floor(Math.random() * funnyMsgs.length)];
+            var resp = await fetch(GOOGLE_SCRIPT_URL + '?action=checkAvailability&date=' + date); var raw = await resp.json();
             if (raw && Array.isArray(raw.busy)) { raw.busy.forEach(function(b) { busyBlocks.push({start: new Date(b.start), end: new Date(b.end)}); }); }
             if (raw && Array.isArray(raw.holidays)) { raw.holidays.forEach(function(h) { holidayBlocks.push({start: new Date(h.start), end: new Date(h.end)}); }); }
         }
         loading.style.display = 'none';
 
-        var templates = SLOT_TEMPLATES[duration] || SLOT_TEMPLATES[2];
-        var slots = templates.map(function(slot) {
-            var slotStart = new Date(date + 'T' + slot.start + ':00');
-            var slotEnd   = new Date(date + 'T' + slot.end   + ':00');
+        var slots = generateHourlySlots(duration).map(function(slot) {
+            var slotStart = new Date(date + 'T' + slot.start + ':00'); var slotEnd = new Date(date + 'T' + slot.end + ':00');
             var available = !busyBlocks.some(function(b) { return b.start < slotEnd && b.end > slotStart; });
             return {time: slot.time, label: slot.label, start: slot.start, end: slot.end, available: available};
         });
 
-        var allBlocked = slots.every(function(s) { return !s.available; });
-        if (allBlocked) {
-            var isHoliday = holidayBlocks.some(function(h) { return dateObj >= h.start && dateObj <= h.end; });
-            if (isHoliday) { error.innerHTML = "I'm off catching some much-needed sunlight! &#127958;&#65039; (Or maybe just drinking a cocktail). Please pick a different date!"; } 
+        if (slots.every(function(s) { return !s.available; })) {
+            if (holidayBlocks.some(function(h) { return dateObj >= h.start && dateObj <= h.end; })) { error.innerHTML = "I'm off catching some much-needed sunlight! 🏖️ (Or maybe just drinking a cocktail). Please pick a different date!"; } 
             else { error.textContent = 'Fully booked on this date — please choose another day.'; }
-            error.style.display = 'block';
-            return;
+            error.style.display = 'block'; return;
         }
 
         slots.forEach(function(slot) {
-            var div = document.createElement('div');
-            div.className = 'timeslot glass-input' + (slot.available ? '' : ' unavailable');
+            var div = document.createElement('div'); div.className = 'timeslot glass-input' + (slot.available ? '' : ' unavailable');
             div.dataset.time = slot.time; div.dataset.start = slot.start; div.dataset.end = slot.end;
             div.innerHTML = '<span class="slot-time">' + slot.time + '</span><span class="slot-label">' + slot.label + (slot.available ? '' : ' — booked') + '</span>';
             if (slot.available) div.onclick = function() { selectSlot(div); };
@@ -580,44 +498,24 @@ async function checkAvailability(date, duration) {
         var available = grid.querySelectorAll('.timeslot:not(.unavailable)');
         if (available.length === 1) selectSlot(available[0]);
 
-    } catch (err) { loading.style.display = 'none'; showFallbackSlots(grid, duration); }
-}
-
-function showFallbackSlots(container, duration) {
-    container.innerHTML = '';
-    var templates = SLOT_TEMPLATES[duration] || SLOT_TEMPLATES[2];
-    templates.forEach(function(slot) {
-        var div = document.createElement('div'); div.className = 'timeslot glass-input'; 
-        div.dataset.time = slot.time; div.dataset.start = slot.start; div.dataset.end = slot.end;
-        div.innerHTML = '<span class="slot-time">' + slot.time + '</span><span class="slot-label">' + slot.label + '</span>';
-        div.onclick = function() { selectSlot(div); };
-        container.appendChild(div);
-    });
+    } catch (err) { loading.style.display = 'none'; }
 }
 
 document.getElementById('booking-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    var form = e.target;
+    e.preventDefault(); var form = e.target;
     if (!document.getElementById('date-picker').value) { toggleCal(); return; }
-    
-    var payload = {};
-    new FormData(form).forEach(function(val, key) { if (!key.startsWith('_')) payload[key] = val; });
-    
+    var payload = {}; new FormData(form).forEach(function(val, key) { if (!key.startsWith('_')) payload[key] = val; });
     payload['Time Slot'] = document.getElementById('timeslot-input').value || 'No preference'; 
-    payload['Time Slot Start'] = document.getElementById('timeslot-start').value || '';
-    payload['Time Slot End'] = document.getElementById('timeslot-end').value || '';
+    payload['Time Slot Start'] = document.getElementById('timeslot-start').value || ''; payload['Time Slot End'] = document.getElementById('timeslot-end').value || '';
     payload['formType'] = 'booking'; 
     
     var btn = form.querySelector('.btn-main'); btn.textContent = 'SENDING...'; btn.disabled = true;
     
     try {
-        await fetch(GOOGLE_SCRIPT_URL, { 
-            method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) 
-        });
+        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }); // CORS handled by backend
         form.style.display = 'none'; document.getElementById('success').style.display = 'block';
     } catch (err) { 
-        btn.textContent = 'REQUEST BOOKING'; btn.disabled = false; 
-        alert('Something went wrong — please try again or email info@visualsofbf.com directly.'); 
+        btn.textContent = 'REQUEST BOOKING'; btn.disabled = false; alert('Something went wrong — please try again or email info@visualsofbf.com directly.'); 
     }
 });
 
