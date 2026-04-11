@@ -71,8 +71,7 @@
         .footer p{font-size:12px;color:var(--text-dim);font-weight:300}
         .footer a{color:var(--accent);text-decoration:none}
         
-        /* Google Maps Autocomplete Glass Fix */
-        .pac-container { z-index: 99999 !important; background: rgba(20, 20, 20, 0.85) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; color: var(--text) !important; box-shadow: 0 16px 48px rgba(0,0,0,0.5) !important; padding: 4px 0; }
+        .pac-container { z-index: 99999 !important; background: rgba(20, 20, 20, 0.85) !important; backdrop-filter: blur(20px) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; color: var(--text) !important; box-shadow: 0 16px 48px rgba(0,0,0,0.5) !important; padding: 4px 0; }
         .pac-item { color: var(--text-mid) !important; border-top: 1px solid rgba(255,255,255,0.05) !important; padding: 10px 16px !important; cursor: pointer !important; transition: background 0.2s; }
         .pac-item:hover { background-color: var(--glow) !important; }
         .pac-item-query { color: var(--text) !important; font-weight: 500 !important; }
@@ -90,11 +89,8 @@
         <p>Complete this short form to get set up as a client. Once submitted, you'll be ready to start booking shoots.</p>
     </div>
     <div class="divider"></div>
-    
-    <script>var submitted = false;</script>
-    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) { document.getElementById('onboarding-form').style.display='none'; document.getElementById('info-card').style.display='none'; document.getElementById('success-msg').style.display='block'; window.scrollTo(0,0); }"></iframe>
 
-    <form id="onboarding-form" class="form-card glass-panel" target="hidden_iframe" action="https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec" method="POST" enctype="multipart/form-data" onsubmit="submitted=true; var btn = this.querySelector('.btn-main'); btn.textContent='UPLOADING...'; btn.style.opacity='0.7'; btn.style.cursor='not-allowed';">
+    <form id="onboarding-form" class="form-card glass-panel">
         <input type="hidden" name="formType" value="onboarding">
         
         <div class="section-label">Contact Details</div>
@@ -129,7 +125,7 @@
         </div>
         <div class="row full">
             <div class="field"><label>Company Address <span class="req">*</span></label><span class="hint">For invoicing purposes</span>
-                <input type="text" id="company-address" class="glass-input" name="Company Address" required placeholder="Start typing company address...">
+                <input type="text" id="company-address" class="glass-input" name="Company Address" required placeholder="Start typing company address or postcode...">
             </div>
         </div>
         <div class="row full">
@@ -141,13 +137,13 @@
         
         <div class="row full">
             <div class="field"><label>Logo File</label><span class="hint">Upload your agency logo (PNG, JPG, SVG)</span>
-                <input type="file" class="glass-input" name="Logo" id="logo-upload" accept="image/png,image/jpeg,image/svg+xml,.ai,.eps,.pdf">
+                <input type="file" class="glass-input" id="logo-upload" accept="image/png,image/jpeg,image/svg+xml,.ai,.eps,.pdf">
             </div>
         </div>
         
         <div class="row full" style="margin-bottom: 0;">
-            <div class="field"><label>Logo Video / Sting</label><span class="hint">Upload a logo animation or intro video if you have one (< 50MB)</span>
-                <input type="file" class="glass-input" name="Logo Video" id="video-upload" accept="video/mp4,video/quicktime,.mov,.mp4">
+            <div class="field"><label>Logo Video / Sting</label><span class="hint">Upload a logo animation or intro video if you have one (< 20MB)</span>
+                <input type="file" class="glass-input" id="video-upload" accept="video/mp4,video/quicktime,.mov,.mp4">
             </div>
         </div>
         <div style="text-align: center; color: var(--text-dim); font-size: 12px; margin: 10px 0;">— OR —</div>
@@ -157,7 +153,7 @@
             </div>
         </div>
 
-        <div class="submit-area"><button type="submit" class="btn-main">Complete Setup</button></div>
+        <div class="submit-area"><button type="submit" id="submit-btn" class="btn-main">Complete Setup</button></div>
     </form>
     
     <div class="success-msg glass-panel" id="success-msg">
@@ -179,16 +175,58 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDV0HpEXZJlvlZjHb0s81yamA2EtI0etG4&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-// Initialize Google Maps Autocomplete for the Onboarding form
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec";
+
 function initAutocomplete() {
-    new google.maps.places.Autocomplete(document.getElementById('company-address'), { types: ['address'] }); // Removed 'UK' restriction just in case you have international billing clients!
+    new google.maps.places.Autocomplete(document.getElementById('company-address'), { componentRestrictions: {country: 'uk'} });
 }
 
-// File Size Checker
 document.getElementById('video-upload').addEventListener('change', function() {
-    if(this.files[0] && this.files[0].size > 50000000) { // 50MB limit
+    if(this.files[0] && this.files[0].size > 20000000) { 
         alert("This video file is too large to upload directly. Please clear this box and paste a Dropbox, Google Drive, or WeTransfer link in the box below instead.");
-        this.value = ""; // Clear the input
+        this.value = ""; 
+    }
+});
+
+const toBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+});
+
+document.getElementById('onboarding-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = 'UPLOADING ASSETS...';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+
+    const formData = new FormData(this);
+    const payload = {};
+    formData.forEach((value, key) => { payload[key] = value; });
+
+    const logoFile = document.getElementById('logo-upload').files[0];
+    const videoFile = document.getElementById('video-upload').files[0];
+
+    if (logoFile) { payload['LogoData'] = await toBase64(logoFile); payload['LogoName'] = logoFile.name; }
+    if (videoFile) { payload['VideoData'] = await toBase64(videoFile); payload['VideoName'] = videoFile.name; }
+
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        
+        document.getElementById('onboarding-form').style.display = 'none';
+        document.getElementById('info-card').style.display = 'none';
+        document.getElementById('success-msg').style.display = 'block';
+        window.scrollTo(0,0);
+    } catch (err) {
+        alert("Upload failed. If your file is very large, please use the 'Video Link' box instead.");
+        btn.textContent = 'Complete Setup';
+        btn.style.opacity = '1';
+        btn.disabled = false;
     }
 });
 </script>
