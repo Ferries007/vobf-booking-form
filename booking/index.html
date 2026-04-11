@@ -113,44 +113,77 @@
         <div class="pkg" data-package="Premium — Photo + Video + Drone + Floorplan (from £300)" data-duration="3"><div class="name">Premium</div><div class="price">£300</div><div class="desc">Photo + Video + Drone + Floorplan</div></div>
         <div class="pkg" data-package="Social Media Teaser (£100 / £75 add-on)" data-duration="1"><div class="name">Teaser</div><div class="price">£100</div><div class="desc">Social Media Video (£75 add-on)</div></div>
     </div>
-    <form class="form-card" action="https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec" method="POST">
-        
-        <input type="hidden" name="formType" value="booking">
-
-        <div class="section-label">Agent Info</div>
+    <form class="form-card" id="booking-form" action="https://hook.eu2.make.com/8ay8nd2ng1cpd0esl86yyo4i6onavlld" method="POST">
+        <input type="text" name="_honey" style="display:none">
+        <input type="hidden" name="Time Slot" id="timeslot-input" value="">
+        <div class="section-label">Property Details</div>
         <div class="row">
-            <div class="field"><label>Agent Name <span class="req">*</span></label><input type="text" name="agentName" required></div>
-            <div class="field"><label>Agent Email <span class="req">*</span></label><input type="email" name="agentEmail" required></div>
-        </div>
-        
-        <div class="gap"></div>
-        <div class="section-label">Homeowner Info</div>
-        <div class="row">
-            <div class="field"><label>Homeowner Name <span class="req">*</span></label><input type="text" name="homeownerName" required></div>
-            <div class="field"><label>Homeowner Email <span class="req">*</span></label><input type="email" name="homeownerEmail" required></div>
-        </div>
-
-        <div class="gap"></div>
-        <div class="section-label">Shoot Details</div>
-        <div class="row full">
-            <div class="field">
-                <label>Property Address <span class="req">*</span></label>
-                <input type="text" name="propertyAddress" required placeholder="Full property address">
+            <div class="field"><label>Client / Agency Name <span class="req">*</span></label><input type="text" name="Client Name" required></div>
+            <div class="field"><label>Package <span class="req">*</span></label>
+                <select name="Package" id="pkg-select" required>
+                    <option value="" disabled selected>Select package</option>
+                    <option value="Basic — Photo + Floorplan (from £155)" data-duration="2">Basic — from £155</option>
+                    <option value="Standard — Photo + Video + Floorplan (from £200)" data-duration="2">Standard — from £200</option>
+                    <option value="Premium — Photo + Video + Drone + Floorplan (from £300)" data-duration="3">Premium — from £300</option>
+                    <option value="Social Media Teaser (£100 / £75 add-on)" data-duration="1">Social Media Teaser</option>
+                    <option value="Not Sure — Happy to Discuss" data-duration="2">Not Sure</option>
+                </select>
             </div>
         </div>
+        <div class="row full">
+            <div class="field"><label>Property Address <span class="req">*</span></label><textarea name="Property Address" required placeholder="Full property address including postcode"></textarea></div>
+        </div>
         <div class="row">
-            <div class="field"><label>Shoot Date <span class="req">*</span></label><input type="date" name="shootDate" required></div>
-            <div class="field"><label>Shoot Time <span class="req">*</span></label><input type="time" name="shootTime" required></div>
+            <div class="field"><label>Homeowner Email <span class="req">*</span></label><span class="hint">We’ll send them a heads-up before the shoot</span><input type="email" name="Homeowner Email" required placeholder="homeowner@email.com"></div>
+            <div class="field"><label>Number of Bedrooms <span class="req">*</span></label><span class="hint"> </span>
+                <select name="Bedrooms" required><option value="" disabled selected>Select</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option></select>
+            </div>
         </div>
         <div class="row full">
             <div class="field">
-                <label>Additional Notes</label>
-                <span class="hint">Access instructions, special requests, etc.</span>
-                <textarea name="notes" placeholder="Leave blank if none"></textarea>
+                <label>Preferred Shoot Date <span class="req">*</span></label>
+                <input type="hidden" name="Preferred Date" id="date-picker" required>
+                <div class="cal-wrap">
+                    <div class="cal-trigger" id="cal-trigger" onclick="toggleCal()">
+                        <span class="cal-text empty" id="cal-display">Select a date</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="cal-dropdown" id="cal-dropdown">
+                        <div class="cal-nav">
+                            <button type="button" onclick="calNav(-1)">&#8249;</button>
+                            <span class="cal-month" id="cal-month-label"></span>
+                            <button type="button" onclick="calNav(1)">&#8250;</button>
+                        </div>
+                        <div class="cal-grid" id="cal-grid"></div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="submit-area"><button type="submit" class="btn-main">Request Booking</button></div>
+        <div class="row full" id="timeslot-row" style="display:none">
+            <div class="field">
+                <label>Preferred Time Slot <span class="req">*</span></label>
+                <div id="timeslots" class="timeslot-grid"></div>
+                <div id="slot-loading" style="display:none">Checking availability…</div>
+                <div id="slot-error" style="display:none"></div>
+                <div id="pkg-hint">Please select a package first to see available time slots.</div>
+            </div>
+        </div>
+        <div class="gap"></div>
+        <div class="section-label">Access Details</div>
+        <div class="row">
+            <div class="field"><label>Key Holder Name <span class="req">*</span></label><input type="text" name="Key Holder Name" required></div>
+            <div class="field"><label>Key Holder Phone <span class="req">*</span></label><input type="tel" name="Key Holder Phone" required></div>
+        </div>
+        <div class="row full">
+            <div class="field"><label>Special Instructions</label><span class="hint">e.g. parking, alarm codes, rooms to highlight</span><textarea name="Special Instructions" placeholder="Anything we should know before the shoot"></textarea></div>
+        </div>
+        <div class="submit-area">
+            <button type="submit" class="btn-main">Request Booking</button>
+            <div class="turnaround">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                48-hour turnaround on all deliveries
+            </div>
+        </div>
     </form>
     <div class="success-msg" id="success">
         <div class="tick"><svg viewBox="0 0 24 20"><polyline points="2,10 8,16 22,2"/></svg></div>
