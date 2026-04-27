@@ -241,6 +241,10 @@
         <div class="row full" id="timeslot-row" style="display:none">
             <div class="field">
                 <label>Preferred Time Slot <span class="req">*</span></label>
+                
+                <div id="arrival-hint" style="display:none; font-size:13px; color:var(--text-mid); margin-bottom:12px; font-weight:300; background: var(--input); padding: 12px 14px; border-radius: 8px; border-left: 3px solid var(--accent);">
+                    </div>
+
                 <div id="timeslots" class="timeslot-grid"></div>
                 <div id="slot-loading" style="display:none">Checking availability…</div>
                 <div id="slot-error" style="display:none"></div>
@@ -344,7 +348,6 @@ document.getElementById('meeting-who').addEventListener('change', function() {
     document.getElementById('meeting-someone').style.display = (this.value === 'Someone Else') ? 'flex' : 'none';
 });
 
-// 👇 UPDATED: Creates 1-hour display blocks, but checks/calculates actual backend duration
 function generateHourlySlots(duration) {
     let slots = [];
     for (let h = 9; h <= 18 - duration; h++) {
@@ -369,7 +372,7 @@ function generateHourlySlots(duration) {
             start: startStr, 
             end: endStr, 
             time: dispStart + ' – ' + dispEnd, // Displayed UI time
-            label: duration + '-hr shoot window', // Friendly sub-text
+            label: 'Arrival Window', // 👇 UPDATED SUB-LABEL
             fullTime: actualFullTimeText // Sent to your backend script
         });
     } 
@@ -469,7 +472,10 @@ function selectSlot(el) {
 
 async function checkAvailability(date, duration) {
     var row = document.getElementById('timeslot-row'); var grid = document.getElementById('timeslots'); var loading = document.getElementById('slot-loading'); var error = document.getElementById('slot-error');
+    var arrivalHint = document.getElementById('arrival-hint'); // 👇 NEW ELEMENT
+    
     row.style.display = 'block'; grid.innerHTML = ''; error.style.display = 'none'; loading.style.display = 'block';
+    arrivalHint.style.display = 'none'; // Hide while loading
     document.getElementById('timeslot-input').value = ''; document.getElementById('timeslot-start').value = ''; document.getElementById('timeslot-end').value = '';
     
     try {
@@ -512,6 +518,10 @@ async function checkAvailability(date, duration) {
             else { error.textContent = 'Fully booked on this date — please choose another day.'; }
             error.style.display = 'block'; return;
         }
+
+        // 👇 UPDATED: Display the dynamic hint based on package duration
+        arrivalHint.innerHTML = '<strong>Note:</strong> The times below are your 1-hour arrival window. Please allow up to <strong>' + duration + ' hours</strong> for the property shoot.';
+        arrivalHint.style.display = 'block';
 
         slots.forEach(function(slot) {
             var div = document.createElement('div'); div.className = 'timeslot glass-input' + (slot.available ? '' : ' unavailable');
