@@ -328,8 +328,24 @@
 <script>
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec"; 
 
+// 🚨 NEW: Variable to track if they actually clicked a Google Maps suggestion
+let isPropertyAddressValid = false;
+
 function initAutocomplete() {
-    new google.maps.places.Autocomplete(document.getElementById('property-address'), { componentRestrictions: {country: 'uk'} });
+    var propInput = document.getElementById('property-address');
+    var propAutocomplete = new google.maps.places.Autocomplete(propInput, { componentRestrictions: {country: 'uk'} });
+
+    // 🚨 NEW: If they click a valid suggestion, mark it as true
+    propAutocomplete.addListener('place_changed', function() {
+        var place = propAutocomplete.getPlace();
+        if (place.geometry) { isPropertyAddressValid = true; }
+    });
+
+    // 🚨 NEW: If they type manually after clicking, reset it to false
+    propInput.addEventListener('input', function() {
+        isPropertyAddressValid = false;
+    });
+
     new google.maps.places.Autocomplete(document.getElementById('pickup-address'), { componentRestrictions: {country: 'uk'} });
 }
 
@@ -352,9 +368,8 @@ function generateHourlySlots(duration) {
     let slots = [];
     for (let h = 9; h <= 18 - duration; h++) {
         let startStr = String(h).padStart(2, '0') + ':00';
-        let endStr = String(h + duration).padStart(2, '0') + ':00'; // Actual blocked end time
+        let endStr = String(h + duration).padStart(2, '0') + ':00'; 
 
-        // Display Window (Client sees a 1-hour window)
         let displayEndHour = h + 1;
         let ampmStart = h >= 12 ? 'PM' : 'AM';
         let ampmEndDisp = displayEndHour >= 12 && displayEndHour < 24 ? 'PM' : 'AM';
@@ -362,7 +377,6 @@ function generateHourlySlots(duration) {
         let dispStart = (h > 12 ? h - 12 : h) + ':00 ' + ampmStart;
         let dispEnd = (displayEndHour > 12 ? displayEndHour - 12 : displayEndHour) + ':00 ' + ampmEndDisp;
 
-        // Actual Backend String (To send to your Calendar / Slack)
         let actualEndHour = h + duration;
         let ampmActualEnd = actualEndHour >= 12 && actualEndHour < 24 ? 'PM' : 'AM';
         let actualEndDisp = (actualEndHour > 12 ? actualEndHour - 12 : actualEndHour) + ':00 ' + ampmActualEnd;
@@ -371,9 +385,9 @@ function generateHourlySlots(duration) {
         slots.push({
             start: startStr, 
             end: endStr, 
-            time: dispStart + ' – ' + dispEnd, // Displayed UI time
-            label: 'Arrival Window', // 👇 UPDATED SUB-LABEL
-            fullTime: actualFullTimeText // Sent to your backend script
+            time: dispStart + ' – ' + dispEnd, 
+            label: 'Arrival Window', 
+            fullTime: actualFullTimeText 
         });
     } 
     return slots;
@@ -464,7 +478,6 @@ document.querySelectorAll('.pkg').forEach(function(card) {
 function selectSlot(el) {
     if (el.classList.contains('unavailable')) return;
     document.querySelectorAll('.timeslot').forEach(function(s) { s.classList.remove('active'); }); el.classList.add('active');
-    // We grab the REAL backend duration from dataset.fulltime
     document.getElementById('timeslot-input').value = el.dataset.fulltime; 
     document.getElementById('timeslot-start').value = el.dataset.start; 
     document.getElementById('timeslot-end').value = el.dataset.end;
@@ -472,10 +485,10 @@ function selectSlot(el) {
 
 async function checkAvailability(date, duration) {
     var row = document.getElementById('timeslot-row'); var grid = document.getElementById('timeslots'); var loading = document.getElementById('slot-loading'); var error = document.getElementById('slot-error');
-    var arrivalHint = document.getElementById('arrival-hint'); // 👇 NEW ELEMENT
+    var arrivalHint = document.getElementById('arrival-hint'); 
     
     row.style.display = 'block'; grid.innerHTML = ''; error.style.display = 'none'; loading.style.display = 'block';
-    arrivalHint.style.display = 'none'; // Hide while loading
+    arrivalHint.style.display = 'none'; 
     document.getElementById('timeslot-input').value = ''; document.getElementById('timeslot-start').value = ''; document.getElementById('timeslot-end').value = '';
     
     try {
@@ -509,7 +522,7 @@ async function checkAvailability(date, duration) {
                 start: slot.start, 
                 end: slot.end, 
                 available: available,
-                fullTime: slot.fullTime // Make sure we pass this through!
+                fullTime: slot.fullTime 
             };
         });
 
@@ -519,13 +532,12 @@ async function checkAvailability(date, duration) {
             error.style.display = 'block'; return;
         }
 
-        // 👇 UPDATED: Display the dynamic hint based on package duration
         arrivalHint.innerHTML = '<strong>Note:</strong> The times below are your 1-hour arrival window. Please allow up to <strong>' + duration + ' hours</strong> for the property shoot.';
         arrivalHint.style.display = 'block';
 
         slots.forEach(function(slot) {
             var div = document.createElement('div'); div.className = 'timeslot glass-input' + (slot.available ? '' : ' unavailable');
-            div.dataset.fulltime = slot.fullTime; // Passes the full duration (e.g. 9:00 - 11:00) to the backend
+            div.dataset.fulltime = slot.fullTime; 
             div.dataset.start = slot.start; 
             div.dataset.end = slot.end;
             div.innerHTML = '<span class="slot-time">' + slot.time + '</span><span class="slot-label">' + slot.label + (slot.available ? '' : ' — booked') + '</span>';
@@ -539,9 +551,25 @@ async function checkAvailability(date, duration) {
     } catch (err) { loading.style.display = 'none'; }
 }
 
+// 🚨 NEW: Updated Submit Handler to catch server conflicts and enforce address validity
 document.getElementById('booking-form').addEventListener('submit', async function(e) {
     e.preventDefault(); var form = e.target;
+    
     if (!document.getElementById('date-picker').value) { toggleCal(); return; }
+    
+    // Safety check: Ensure they picked a time slot
+    if (!document.getElementById('timeslot-input').value) { 
+        alert("Please select a time slot from the available options."); 
+        return; 
+    }
+
+    // Safety check: Enforce the Google Maps address selection
+    if (!isPropertyAddressValid) {
+        alert("Please select the correct property address from the Google Maps dropdown suggestions.");
+        document.getElementById('property-address').focus();
+        return;
+    }
+
     var payload = {}; new FormData(form).forEach(function(val, key) { if (!key.startsWith('_')) payload[key] = val; });
     payload['Time Slot'] = document.getElementById('timeslot-input').value || 'No preference'; 
     payload['Time Slot Start'] = document.getElementById('timeslot-start').value || ''; payload['Time Slot End'] = document.getElementById('timeslot-end').value || '';
@@ -550,7 +578,21 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     var btn = form.querySelector('.btn-main'); btn.textContent = 'SENDING...'; btn.disabled = true;
     
     try {
-        await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        var response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+        var data = await response.json(); // Parses the response from the Google Script
+        
+        // 🚨 This triggers if the slot got booked while they had the tab open
+        if (data.status === "conflict") {
+            alert("🚨 " + data.message);
+            btn.textContent = 'REQUEST BOOKING'; btn.disabled = false;
+            
+            // Automatically refresh the time slots for them
+            var dur = getSelectedDuration();
+            checkAvailability(document.getElementById('date-picker').value, dur);
+            return;
+        }
+
+        // If it was a success:
         form.style.display = 'none'; document.getElementById('success').style.display = 'block';
     } catch (err) { 
         btn.textContent = 'REQUEST BOOKING'; btn.disabled = false; alert('Something went wrong — please try again or email info@visualsofbf.com directly.'); 
@@ -573,7 +615,10 @@ window.addEventListener('DOMContentLoaded', () => {
         if(params.get('t') === 'Yes') { document.getElementById('teaser-toggle').checked = true; document.getElementById('teaser-input').value = "Yes"; }
         
         document.querySelector('input[name="Flat Number"]').value = params.get('f') || '';
+        
+        // Pre-fill address and mark it as valid since it came from our own system
         document.getElementById('property-address').value = params.get('ad') || '';
+        if(params.get('ad')) { isPropertyAddressValid = true; }
         
         document.querySelector('input[name="Homeowner Name"]').value = params.get('hn') || '';
         document.querySelector('input[name="Homeowner Phone"]').value = params.get('hp') || '';
