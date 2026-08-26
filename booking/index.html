@@ -342,6 +342,14 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGj
 // 🚨 NEW: Variable to track if they actually clicked a Google Maps suggestion
 let isPropertyAddressValid = false;
 
+// Address-gate fallback. If Google Maps never loads (ad/content blocker, network
+// filtering, API outage) there is no dropdown to pick from, and demanding a
+// selection would lock the agent out of booking entirely. Track whether
+// autocomplete really came up so the gate can degrade instead of trapping them.
+var autocompleteReady = false;
+var addressFallbackOffered = false;
+var addressUnverified = false;
+
 // Personal email domain check — Agent Email only. Homeowner Email is expected
 // to be a personal address and is never checked. Duplicated server-side in
 // Code.js (isPersonalEmailDomain) since this is a static site with no shared module.
@@ -358,6 +366,7 @@ function isPersonalEmailDomain(email) {
 var emailWarningPrompted = false;
 
 function initAutocomplete() {
+  try {
     var propInput = document.getElementById('property-address');
     var propAutocomplete = new google.maps.places.Autocomplete(propInput, { componentRestrictions: {country: 'uk'} });
 
@@ -373,6 +382,12 @@ function initAutocomplete() {
     });
 
     new google.maps.places.Autocomplete(document.getElementById('pickup-address'), { componentRestrictions: {country: 'uk'} });
+    autocompleteReady = true;
+  } catch (err) {
+    // Maps loaded but Autocomplete could not be constructed — leave
+    // autocompleteReady false so the address gate degrades instead of trapping.
+    autocompleteReady = false;
+  }
 }
 
 document.getElementById('presenter-toggle').addEventListener('change', function() { document.getElementById('presenter-input').value = this.checked ? "Yes" : "No"; });
@@ -589,11 +604,22 @@ document.getElementById('booking-form').addEventListener('submit', async functio
         return; 
     }
 
-    // Safety check: Enforce the Google Maps address selection
+    // Safety check: Enforce the Google Maps address selection, but never trap a
+    // booking. If autocomplete isn't working there is nothing to select, and even
+    // when it is, predictions can fail mid-session (quota/outage) — so a second
+    // attempt always goes through, flagged as unverified for Brandon to eyeball.
+    addressUnverified = false;
     if (!isPropertyAddressValid) {
-        alert("Please select the correct property address from the Google Maps dropdown suggestions.");
-        document.getElementById('property-address').focus();
-        return;
+        if (!autocompleteReady) {
+            addressUnverified = true;          // no dropdown ever existed
+        } else if (!addressFallbackOffered) {
+            addressFallbackOffered = true;
+            alert("Please select the correct property address from the Google Maps dropdown suggestions.\n\nIf no suggestions appear, press Request Booking again and we'll use the address exactly as you've typed it.");
+            document.getElementById('property-address').focus();
+            return;
+        } else {
+            addressUnverified = true;          // second attempt — let it through
+        }
     }
 
     // Soft warning: Agent Email only — Homeowner Email is expected to be personal.
@@ -608,7 +634,8 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     var payload = {}; new FormData(form).forEach(function(val, key) { if (!key.startsWith('_')) payload[key] = val; });
     payload['Time Slot'] = document.getElementById('timeslot-input').value || 'No preference'; 
     payload['Time Slot Start'] = document.getElementById('timeslot-start').value || ''; payload['Time Slot End'] = document.getElementById('timeslot-end').value || '';
-    payload['formType'] = 'booking'; 
+    payload['formType'] = 'booking';
+    payload['Address Verified'] = addressUnverified ? 'No' : 'Yes';
     
     var btn = form.querySelector('.btn-main'); btn.textContent = 'SENDING...'; btn.disabled = true;
     
