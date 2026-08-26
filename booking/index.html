@@ -150,7 +150,7 @@
         <div class="pkg glass-panel glass-input" data-package="Basic — Photo + Floorplan (from £155)" data-duration="2"><div class="name">Basic</div><div class="price">£155</div><div class="desc">Photo + Floorplan</div></div>
         <div class="pkg glass-panel glass-input" data-package="Standard — Photo + Video + Floorplan (from £200)" data-duration="2"><div class="name">Standard</div><div class="price">£200</div><div class="desc">Photo + Video + Floorplan</div></div>
         <div class="pkg glass-panel glass-input" data-package="Premium — Photo + Video + Drone + Floorplan (from £300)" data-duration="3"><div class="name">Premium</div><div class="price">£300</div><div class="desc">Photo + Video + Drone + Floorplan</div></div>
-        <div class="pkg glass-panel glass-input" data-package="Social Media Teaser (£100 / £50 add-on)" data-duration="1"><div class="name">Teaser</div><div class="price">£100</div><div class="desc">Social Media Video (£50 add-on)</div></div>
+        <div class="pkg glass-panel glass-input" data-package="Social Media Teaser (£100 / £100 add-on)" data-duration="1"><div class="name">Teaser</div><div class="price">£100</div><div class="desc">Social Media Video (£100 add-on)</div></div>
     </div>
     
     <div id="edit-banner" style="display:none;" class="glass-panel">
@@ -180,7 +180,7 @@
                     <option value="Basic — Photo + Floorplan (from £155)" data-duration="2">Basic — from £155</option>
                     <option value="Standard — Photo + Video + Floorplan (from £200)" data-duration="2">Standard — from £200</option>
                     <option value="Premium — Photo + Video + Drone + Floorplan (from £300)" data-duration="3">Premium — from £300</option>
-                    <option value="Social Media Teaser (£100 / £50 add-on)" data-duration="1">Social Media Teaser</option>
+                    <option value="Social Media Teaser (£100 / £100 add-on)" data-duration="1">Social Media Teaser</option>
                     <option value="Not Sure — Happy to Discuss" data-duration="2">Not Sure</option>
                 </select>
             </div>
@@ -197,7 +197,7 @@
                 </label>
             </div>
             <div class="field" id="teaser-toggle-container">
-                <label>Add Social Media Teaser (+£50)</label>
+                <label>Add Social Media Teaser (+£100)</label>
                 <span class="hint">< 60s video optimized for socials</span>
                 <label class="toggle-wrap">
                     <input type="checkbox" class="toggle-input" id="teaser-toggle">
@@ -774,6 +774,22 @@ function setEditMode(on) {
     }
 }
 
+// A stored booking may name a package that is no longer offered — a price change
+// rewrites the option value, so "…(£100 / £50 add-on)" stops matching. Without
+// this the select would silently fall blank and the edit would wipe the package.
+function setPackageValue(sel, val) {
+    if (!val) return;
+    sel.value = val;
+    if (sel.value === val) return;
+    var dur = /teaser/i.test(val) ? '1' : (/premium/i.test(val) ? '3' : '2');
+    var opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = val + ' (as booked)';
+    opt.setAttribute('data-duration', dur);
+    sel.appendChild(opt);
+    sel.value = val;
+}
+
 // Fills every field from a stored booking, then reloads live availability for
 // its date so the agent sees real slots — same code path as a normal booking.
 async function prefillFromBooking(b) {
@@ -792,7 +808,7 @@ async function prefillFromBooking(b) {
     isPropertyAddressValid = true;   // came from our own record, already verified
 
     var pkgSelect = document.getElementById('pkg-select');
-    pkgSelect.value = b["Package"] || '';
+    setPackageValue(pkgSelect, b["Package"] || '');
     document.querySelectorAll('.pkg').forEach(function (card) {
         card.classList.toggle('selected', card.getAttribute('data-package') === b["Package"]);
     });
@@ -890,7 +906,7 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector('input[name="Agent Email"]').value = params.get('e') || '';
         
         let pkgSelect = document.getElementById('pkg-select');
-        pkgSelect.value = params.get('p') || '';
+        setPackageValue(pkgSelect, params.get('p') || '');
         pkgSelect.dispatchEvent(new Event('change'));
         
         if(params.get('pr') === 'Yes') { document.getElementById('presenter-toggle').checked = true; document.getElementById('presenter-input').value = "Yes"; }
