@@ -47,6 +47,8 @@
         .field label{font-size:12px;font-weight:500;color:var(--text-mid);letter-spacing:.4px;text-transform:uppercase}
         .field label .req{color:var(--accent)}
         .field .hint{font-size:11px;color:var(--text-dim);font-weight:300}
+        .travel-note{font-size:12px;color:var(--text-mid);font-weight:300;line-height:1.55;background:var(--input);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:11px 14px;margin:-6px 0 16px}
+        .travel-note strong{color:var(--accent);font-weight:600}
         
         .field input,.field select,.field textarea{font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:10px;padding:12px 14px;outline:none;-webkit-appearance:none;appearance:none; width: 100%;}
         .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
@@ -208,8 +210,9 @@
 
         <div class="row three">
             <div class="field"><label>Flat / Unit</label><input type="text" class="glass-input" name="Flat Number" placeholder="e.g. 3/1"></div>
-            <div class="field"><label>Property Address <span class="req">*</span></label><span class="hint">Properties over 30 miles from our base in Uddingston may incur a travel fee — £35 over 30 miles, £50 over 80 miles. We'll confirm this with you when we accept your booking.</span><input type="text" class="glass-input" id="property-address" name="Property Address" required placeholder="Start typing address or postcode..."></div>
+            <div class="field"><label>Property Address <span class="req">*</span></label><input type="text" class="glass-input" id="property-address" name="Property Address" required placeholder="Start typing address or postcode..."></div>
         </div>
+        <div class="travel-note">Properties more than 30 miles from our base in Uddingston may incur a travel fee — <strong>£35</strong> over 30 miles, <strong>£50</strong> over 80 miles. We'll confirm this with you when we accept your booking.</div>
         
         <div class="row">
             <div class="field"><label>Homeowner Name <span class="req">*</span></label><input type="text" class="glass-input" name="Homeowner Name" required placeholder="e.g. Emma"></div>
