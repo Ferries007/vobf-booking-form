@@ -364,6 +364,27 @@ function isPersonalEmailDomain(email) {
     return !!PERSONAL_EMAIL_DOMAINS[email.slice(at + 1).trim().toLowerCase()];
 }
 var emailWarningPrompted = false;
+// Tracks how the warning was opened: from the submit attempt (so "Yes, that's
+// correct" should continue the submission) or from leaving the field (where it
+// should just close and let them carry on filling the form in).
+var emailModalFromSubmit = false;
+
+function showEmailWarning(fromSubmit) {
+    var field = document.querySelector('input[name="Agent Email"]');
+    emailWarningPrompted = true;
+    emailModalFromSubmit = !!fromSubmit;
+    document.getElementById('email-warning-value').textContent = field.value;
+    document.getElementById('email-warning-modal').style.display = 'flex';
+}
+
+// Warn as soon as they leave the Agent Email field, rather than making them get
+// all the way to submit. Agent Email only — Homeowner Email is expected to be a
+// personal address and is never checked. Still at most once per page load.
+document.querySelector('input[name="Agent Email"]').addEventListener('blur', function() {
+    if (!emailWarningPrompted && isPersonalEmailDomain(this.value)) {
+        showEmailWarning(false);
+    }
+});
 
 function initAutocomplete() {
   try {
@@ -595,7 +616,11 @@ async function checkAvailability(date, duration) {
 // 🚨 NEW: Updated Submit Handler to catch server conflicts and enforce address validity
 document.getElementById('booking-form').addEventListener('submit', async function(e) {
     e.preventDefault(); var form = e.target;
-    
+
+    // Clicking submit blurs the email field first, which can raise the warning
+    // between mousedown and click. Never submit underneath an open modal.
+    if (document.getElementById('email-warning-modal').style.display === 'flex') { return; }
+
     if (!document.getElementById('date-picker').value) { toggleCal(); return; }
     
     // Safety check: Ensure they picked a time slot
@@ -622,12 +647,12 @@ document.getElementById('booking-form').addEventListener('submit', async functio
         }
     }
 
-    // Soft warning: Agent Email only — Homeowner Email is expected to be personal.
+    // Backstop for the blur warning: covers a prefilled address that was never
+    // focused, or a browser that fired no blur. Agent Email only — Homeowner
+    // Email is expected to be personal and is never checked.
     var agentEmailField = document.querySelector('input[name="Agent Email"]');
     if (!emailWarningPrompted && isPersonalEmailDomain(agentEmailField.value)) {
-        emailWarningPrompted = true;
-        document.getElementById('email-warning-value').textContent = agentEmailField.value;
-        document.getElementById('email-warning-modal').style.display = 'flex';
+        showEmailWarning(true);
         return;
     }
 
@@ -663,6 +688,9 @@ document.getElementById('booking-form').addEventListener('submit', async functio
 
 document.getElementById('email-warning-confirm').addEventListener('click', function() {
     document.getElementById('email-warning-modal').style.display = 'none';
+    // Only continue the submission if the warning interrupted one. Raised on
+    // blur, this just closes so they can carry on filling the form in.
+    if (!emailModalFromSubmit) return;
     var f = document.getElementById('booking-form');
     // requestSubmit() is missing on Safari < 16 — fall back so the booking is never lost.
     if (f.requestSubmit) { f.requestSubmit(); }
