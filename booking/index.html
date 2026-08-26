@@ -49,6 +49,8 @@
         .field .hint{font-size:11px;color:var(--text-dim);font-weight:300}
         .travel-note{font-size:12px;color:var(--text-mid);font-weight:300;line-height:1.55;background:var(--input);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:11px 14px;margin:-6px 0 16px}
         .travel-note strong{color:var(--accent);font-weight:600}
+        #edit-banner{padding:16px 20px;margin-bottom:20px;border-left:3px solid var(--accent);background:var(--glow);font-size:13px;color:var(--text-mid);font-weight:300;line-height:1.55}
+        #edit-banner strong{display:block;color:var(--accent);font-size:15px;font-weight:600;margin-bottom:4px;letter-spacing:.3px}
         
         .field input,.field select,.field textarea{font-family:var(--font-body);font-size:14px;color:var(--text);border-radius:10px;padding:12px 14px;outline:none;-webkit-appearance:none;appearance:none; width: 100%;}
         .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
@@ -151,6 +153,10 @@
         <div class="pkg glass-panel glass-input" data-package="Social Media Teaser (£100 / £50 add-on)" data-duration="1"><div class="name">Teaser</div><div class="price">£100</div><div class="desc">Social Media Video (£50 add-on)</div></div>
     </div>
     
+    <div id="edit-banner" style="display:none;" class="glass-panel">
+        <strong>You're updating an existing booking.</strong>
+        <span>Change whatever you need and press Update Booking. A new date or time is confirmed with us first; anything else is applied straight away.</span>
+    </div>
     <form class="form-card glass-panel" id="booking-form">
         <input type="hidden" name="formType" value="booking">
         <input type="text" name="_honey" style="display:none">
@@ -318,6 +324,17 @@
             </div>
         </div>
     </form>
+    <div class="glass-panel" id="duplicate-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.6); border-radius:0; align-items:center; justify-content:center;">
+        <div class="glass-panel" style="max-width:460px; margin:20px; padding:28px 26px; background:#141414;">
+            <div class="section-label" style="font-size:17px; margin-bottom:14px;">You've already booked this property</div>
+            <p style="font-size:14px; color:var(--text-mid); font-weight:300; margin-bottom:8px;">We've got a booking for <strong style="color:var(--text);" id="dup-address"></strong> on <strong style="color:var(--text);" id="dup-date"></strong>, <strong style="color:var(--text);" id="dup-slot"></strong>.</p>
+            <p style="font-size:14px; color:var(--text); margin-bottom:20px;">Did you want to change something about it?</p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <button type="button" id="dup-edit" class="glass-input" style="flex:1; min-width:170px; padding:12px; cursor:pointer; color:var(--accent); font-family:var(--font-body); font-size:14px; border-radius:10px;">Yes, update that booking</button>
+                <button type="button" id="dup-new" class="glass-input" style="flex:1; min-width:170px; padding:12px; cursor:pointer; color:var(--text); font-family:var(--font-body); font-size:14px; border-radius:10px;">No, this is a different property</button>
+            </div>
+        </div>
+    </div>
     <div class="glass-panel" id="email-warning-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.6); border-radius:0; align-items:center; justify-content:center;">
         <div class="glass-panel" style="max-width:420px; margin:20px; padding:28px 26px; background:#141414;">
             <div class="section-label" style="font-size:17px; margin-bottom:14px;">That looks like a personal email address</div>
@@ -359,7 +376,10 @@ var addressUnverified = false;
 var PERSONAL_EMAIL_DOMAINS = {
     'gmail.com':1, 'googlemail.com':1, 'yahoo.com':1, 'yahoo.co.uk':1,
     'hotmail.com':1, 'hotmail.co.uk':1, 'outlook.com':1, 'live.com':1,
-    'live.co.uk':1, 'icloud.com':1, 'me.com':1, 'aol.com':1, 'msn.com':1
+    'live.co.uk':1, 'icloud.com':1, 'me.com':1, 'aol.com':1, 'msn.com':1,
+    'btinternet.com':1, 'sky.com':1, 'talktalk.net':1, 'virginmedia.com':1,
+    'ntlworld.com':1, 'blueyonder.co.uk':1, 'protonmail.com':1, 'proton.me':1,
+    'gmx.com':1, 'mail.com':1
 };
 function isPersonalEmailDomain(email) {
     var at = String(email || '').lastIndexOf('@');
@@ -664,6 +684,8 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     payload['Time Slot Start'] = document.getElementById('timeslot-start').value || ''; payload['Time Slot End'] = document.getElementById('timeslot-end').value || '';
     payload['formType'] = 'booking';
     payload['Address Verified'] = addressUnverified ? 'No' : 'Yes';
+    if (editRow) { payload['Edit Row'] = editRow; payload['Edit Token'] = editToken; }
+    if (duplicateOverride) { payload['Duplicate Override'] = 'Yes'; }
     
     var btn = form.querySelector('.btn-main'); btn.textContent = 'SENDING...'; btn.disabled = true;
     
@@ -671,6 +693,37 @@ document.getElementById('booking-form').addEventListener('submit', async functio
         var response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
         var data = await response.json(); // Parses the response from the Google Script
         
+        // STEP 3: they already have an open booking for this property
+        if (data.status === "duplicate") {
+            pendingDuplicate = data;
+            document.getElementById('dup-address').textContent = data.address || 'this property';
+            document.getElementById('dup-date').textContent = data.date || '';
+            document.getElementById('dup-slot').textContent = data.timeSlot || '';
+            document.getElementById('duplicate-modal').style.display = 'flex';
+            btn.textContent = 'REQUEST BOOKING'; btn.disabled = false;
+            return;
+        }
+
+        // STEP 3: outcomes of an edit resubmit
+        if (data.status === "updated" || data.status === "pending" || data.status === "unchanged") {
+            form.style.display = 'none';
+            var panel = document.getElementById('success');
+            panel.querySelector('h3').textContent =
+                data.status === "pending" ? 'Change Requested'
+              : data.status === "unchanged" ? 'Nothing Changed' : 'Booking Updated';
+            panel.querySelector('p').innerHTML = data.message ||
+                'Your booking has been updated.';
+            panel.style.display = 'block';
+            return;
+        }
+
+        if (data.status === "error") {
+            alert(data.message || 'Something went wrong.');
+            btn.textContent = editRow ? 'UPDATE BOOKING' : 'REQUEST BOOKING';
+            btn.disabled = false;
+            return;
+        }
+
         // 🚨 This triggers if the slot got booked while they had the tab open
         if (data.status === "conflict") {
             alert("🚨 " + data.message);
@@ -706,9 +759,131 @@ document.getElementById('email-warning-edit').addEventListener('click', function
     field.select();
 });
 
+// ===== STEP 3: duplicate detection + pre-filled edit mode =====
+var editRow = null, editToken = null, duplicateOverride = false;
+var pendingDuplicate = null;
+
+function setEditMode(on) {
+    document.getElementById('edit-banner').style.display = on ? 'block' : 'none';
+    var btn = document.querySelector('.btn-main');
+    if (btn) btn.textContent = on ? 'UPDATE BOOKING' : 'REQUEST BOOKING';
+    var h = document.getElementById('header-text');
+    if (on && h) {
+        h.innerHTML = "<strong>Updating your booking.</strong> Change what you need below.";
+        h.style.color = "var(--accent)";
+    }
+}
+
+// Fills every field from a stored booking, then reloads live availability for
+// its date so the agent sees real slots — same code path as a normal booking.
+async function prefillFromBooking(b) {
+    var setVal = function (sel, val) { var el = document.querySelector(sel); if (el) el.value = val == null ? '' : val; };
+    setVal('input[name="Client Name"]', b["Client Name"]);
+    setVal('input[name="Agent Name"]', b["Agent Name"]);
+    setVal('input[name="Agent Email"]', b["Agent Email"]);
+    setVal('input[name="Flat Number"]', b["Flat Number"]);
+    setVal('input[name="Homeowner Name"]', b["Homeowner Name"]);
+    setVal('input[name="Homeowner Phone"]', b["Homeowner Phone"]);
+    setVal('input[name="Homeowner Email"]', b["Homeowner Email"]);
+    setVal('textarea[name="Additional Notes"]', b["Additional Notes"] === 'None' ? '' : b["Additional Notes"]);
+    setVal('select[name="Bedrooms"]', b["Bedrooms"]);
+
+    document.getElementById('property-address').value = b["Property Address"] || '';
+    isPropertyAddressValid = true;   // came from our own record, already verified
+
+    var pkgSelect = document.getElementById('pkg-select');
+    pkgSelect.value = b["Package"] || '';
+    document.querySelectorAll('.pkg').forEach(function (card) {
+        card.classList.toggle('selected', card.getAttribute('data-package') === b["Package"]);
+    });
+    if (b["Presenter Piece"] === 'Yes') {
+        document.getElementById('presenter-toggle').checked = true;
+        document.getElementById('presenter-input').value = 'Yes';
+    }
+    if (b["Teaser Add-on"] === 'Yes') {
+        document.getElementById('teaser-toggle').checked = true;
+        document.getElementById('teaser-input').value = 'Yes';
+    }
+    if (String(b["Package"] || '').includes('Social Media Teaser')) {
+        document.getElementById('teaser-toggle-container').style.display = 'none';
+    }
+
+    var accessSel = document.getElementById('access-type');
+    accessSel.value = b["Access Type"] || 'Meeting';
+    accessSel.dispatchEvent(new Event('change'));
+
+    // Date + slot: render the real calendar state, then re-select their slot.
+    var ymd = b["Preferred Date"];
+    if (ymd) {
+        var parts = ymd.split('-');
+        var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+        selectedDate = d;
+        document.getElementById('date-picker').value = ymd;
+        var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        var disp = document.getElementById('cal-display');
+        disp.textContent = dayNames[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+        disp.classList.remove('empty');
+        calMonth = d.getMonth(); calYear = d.getFullYear(); renderCal();
+        var dur = getSelectedDuration() || 2;
+        await checkAvailability(ymd, dur);
+        document.querySelectorAll('.timeslot').forEach(function (el) {
+            if (el.dataset.start === String(b["Time Slot Start"])) selectSlot(el);
+        });
+        // Their current slot shows as booked (it's theirs) — keep it selectable.
+        if (!document.getElementById('timeslot-input').value) {
+            document.getElementById('timeslot-input').value = b["Time Slot"] || '';
+            document.getElementById('timeslot-start').value = b["Time Slot Start"] || '';
+            document.getElementById('timeslot-end').value = b["Time Slot End"] || '';
+        }
+    }
+}
+
+async function enterEditMode(row, token) {
+    try {
+        var res = await fetch(GOOGLE_SCRIPT_URL + '?action=getBooking&row=' + encodeURIComponent(row) + '&token=' + encodeURIComponent(token));
+        var data = await res.json();
+        if (!data || data.status !== 'ok') {
+            alert((data && data.message) || 'That edit link is no longer valid. Please make a new booking.');
+            return;
+        }
+        editRow = row; editToken = token;
+        setEditMode(true);
+        await prefillFromBooking(data.booking);
+    } catch (err) {
+        alert('We could not load that booking. Please try again or email info@visualsofbf.com.');
+    }
+}
+
+document.getElementById('dup-edit').addEventListener('click', function () {
+    document.getElementById('duplicate-modal').style.display = 'none';
+    if (!pendingDuplicate) return;
+    var d = pendingDuplicate; pendingDuplicate = null;
+    var btn = document.querySelector('.btn-main'); btn.textContent = 'LOADING...'; btn.disabled = true;
+    enterEditMode(d.row, d.editToken).then(function () {
+        btn.disabled = false;
+        if (!editRow) btn.textContent = 'REQUEST BOOKING';
+    });
+});
+
+document.getElementById('dup-new').addEventListener('click', function () {
+    document.getElementById('duplicate-modal').style.display = 'none';
+    pendingDuplicate = null;
+    duplicateOverride = true;          // don't ask again for this submission
+    var f = document.getElementById('booking-form');
+    if (f.requestSubmit) { f.requestSubmit(); }
+    else { f.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
+});
+
 // MAGIC RESCHEDULE SCRIPT: Pre-fills form fields based on URL parameters
 window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
+
+    // STEP 3: an edit link takes precedence over the older reschedule prefill.
+    if (params.has('edit') && params.has('token')) {
+        enterEditMode(params.get('edit'), params.get('token'));
+        return;
+    }
+
     if(params.has('c')) {
         document.querySelector('input[name="Client Name"]').value = params.get('c') || '';
         document.querySelector('input[name="Agent Name"]').value = params.get('a') || '';
