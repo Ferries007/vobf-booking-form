@@ -208,7 +208,7 @@
 
         <div class="row three">
             <div class="field"><label>Flat / Unit</label><input type="text" class="glass-input" name="Flat Number" placeholder="e.g. 3/1"></div>
-            <div class="field"><label>Property Address <span class="req">*</span></label><input type="text" class="glass-input" id="property-address" name="Property Address" required placeholder="Start typing address or postcode..."></div>
+            <div class="field"><label>Property Address <span class="req">*</span></label><span class="hint">Bookings more than 30 miles from our base may incur a £35 travel fee. We'll always confirm this with you before your shoot is booked.</span><input type="text" class="glass-input" id="property-address" name="Property Address" required placeholder="Start typing address or postcode..."></div>
         </div>
         
         <div class="row">
@@ -315,6 +315,17 @@
             </div>
         </div>
     </form>
+    <div class="glass-panel" id="email-warning-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.6); border-radius:0; align-items:center; justify-content:center;">
+        <div class="glass-panel" style="max-width:420px; margin:20px; padding:28px 26px; background:#141414;">
+            <div class="section-label" style="font-size:17px; margin-bottom:14px;">That looks like a personal email address</div>
+            <p style="font-size:14px; color:var(--text-mid); font-weight:300; margin-bottom:14px;">We use this address to send your booking confirmation and delivery links, so it's worth double-checking.</p>
+            <p style="font-size:14px; color:var(--text); margin-bottom:20px;">Entered: <strong id="email-warning-value"></strong></p>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <button type="button" id="email-warning-confirm" class="glass-input" style="flex:1; min-width:150px; padding:12px; cursor:pointer; color:var(--text); font-family:var(--font-body); font-size:14px; border-radius:10px;">Yes, that's correct</button>
+                <button type="button" id="email-warning-edit" class="glass-input" style="flex:1; min-width:150px; padding:12px; cursor:pointer; color:var(--accent); font-family:var(--font-body); font-size:14px; border-radius:10px;">Use a different address</button>
+            </div>
+        </div>
+    </div>
     <div class="success-msg glass-panel" id="success">
         <div class="tick"><svg viewBox="0 0 24 20"><polyline points="2,10 8,16 22,2"/></svg></div>
         <h3>Booking Received</h3>
@@ -330,6 +341,21 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGj
 
 // 🚨 NEW: Variable to track if they actually clicked a Google Maps suggestion
 let isPropertyAddressValid = false;
+
+// Personal email domain check — Agent Email only. Homeowner Email is expected
+// to be a personal address and is never checked. Duplicated server-side in
+// Code.js (isPersonalEmailDomain) since this is a static site with no shared module.
+var PERSONAL_EMAIL_DOMAINS = {
+    'gmail.com':1, 'googlemail.com':1, 'yahoo.com':1, 'yahoo.co.uk':1,
+    'hotmail.com':1, 'hotmail.co.uk':1, 'outlook.com':1, 'live.com':1,
+    'live.co.uk':1, 'icloud.com':1, 'me.com':1, 'aol.com':1, 'msn.com':1
+};
+function isPersonalEmailDomain(email) {
+    var at = String(email || '').lastIndexOf('@');
+    if (at === -1) return false;
+    return !!PERSONAL_EMAIL_DOMAINS[email.slice(at + 1).trim().toLowerCase()];
+}
+var emailWarningPrompted = false;
 
 function initAutocomplete() {
     var propInput = document.getElementById('property-address');
@@ -570,6 +596,15 @@ document.getElementById('booking-form').addEventListener('submit', async functio
         return;
     }
 
+    // Soft warning: Agent Email only — Homeowner Email is expected to be personal.
+    var agentEmailField = document.querySelector('input[name="Agent Email"]');
+    if (!emailWarningPrompted && isPersonalEmailDomain(agentEmailField.value)) {
+        emailWarningPrompted = true;
+        document.getElementById('email-warning-value').textContent = agentEmailField.value;
+        document.getElementById('email-warning-modal').style.display = 'flex';
+        return;
+    }
+
     var payload = {}; new FormData(form).forEach(function(val, key) { if (!key.startsWith('_')) payload[key] = val; });
     payload['Time Slot'] = document.getElementById('timeslot-input').value || 'No preference'; 
     payload['Time Slot Start'] = document.getElementById('timeslot-start').value || ''; payload['Time Slot End'] = document.getElementById('timeslot-end').value || '';
@@ -597,6 +632,20 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     } catch (err) { 
         btn.textContent = 'REQUEST BOOKING'; btn.disabled = false; alert('Something went wrong — please try again or email info@visualsofbf.com directly.'); 
     }
+});
+
+document.getElementById('email-warning-confirm').addEventListener('click', function() {
+    document.getElementById('email-warning-modal').style.display = 'none';
+    var f = document.getElementById('booking-form');
+    // requestSubmit() is missing on Safari < 16 — fall back so the booking is never lost.
+    if (f.requestSubmit) { f.requestSubmit(); }
+    else { f.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
+});
+document.getElementById('email-warning-edit').addEventListener('click', function() {
+    document.getElementById('email-warning-modal').style.display = 'none';
+    var field = document.querySelector('input[name="Agent Email"]');
+    field.focus();
+    field.select();
 });
 
 // MAGIC RESCHEDULE SCRIPT: Pre-fills form fields based on URL parameters
