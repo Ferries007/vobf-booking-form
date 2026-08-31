@@ -157,7 +157,7 @@
     </div>
 
     <div class="mode-label" id="package-label">Package</div>
-    <div class="packages">
+    <div class="packages" id="package-grid">
         <div class="pkg glass-panel glass-input" data-package="Basic — Photo + Floorplan (from £155)" data-duration="2"><div class="name">Basic</div><div class="price">£155</div><div class="desc">Photo + Floorplan</div></div>
         <div class="pkg glass-panel glass-input" data-package="Standard — Photo + Video + Floorplan (from £200)" data-duration="2"><div class="name">Standard</div><div class="price">£200</div><div class="desc">Photo + Video + Floorplan</div></div>
         <div class="pkg glass-panel glass-input" data-package="Premium — Photo + Video + Drone + Floorplan (from £300)" data-duration="3"><div class="name">Premium</div><div class="price">£300</div><div class="desc">Photo + Video + Drone + Floorplan</div></div>
@@ -657,9 +657,9 @@ document.getElementById('pkg-select').addEventListener('change', function() {
     if (dateVal) { var dur = getSelectedDuration(); if (dur) { document.getElementById('pkg-hint').style.display = 'none'; checkAvailability(dateVal, dur); } }
 });
 
-document.querySelectorAll('.pkg').forEach(function(card) {
+document.querySelectorAll('#package-grid .pkg').forEach(function(card) {
     card.addEventListener('click', function() {
-        document.querySelectorAll('.pkg').forEach(function(c) { c.classList.remove('selected'); }); card.classList.add('selected');
+        document.querySelectorAll('#package-grid .pkg').forEach(function(c) { c.classList.remove('selected'); }); card.classList.add('selected');
         var sel = document.getElementById('pkg-select'); var val = card.getAttribute('data-package');
         for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === val) { sel.selectedIndex = i; break; } }
         if(val.includes("Social Media Teaser")) { document.getElementById('teaser-toggle-container').style.display = 'none'; document.getElementById('teaser-toggle').checked = false; document.getElementById('teaser-input').value = "No"; } 
@@ -885,6 +885,31 @@ function setEditMode(on) {
     }
 }
 
+
+// Package prefill. `p` accepts a short slug (basic/standard/premium/teaser) so a
+// link is something you can paste into the Wix editor by hand, or the full
+// package string, which is what the older reschedule links (?c=…&p=…) carry.
+var PACKAGE_SLUGS = {
+    basic:    'Basic — Photo + Floorplan (from £155)',
+    standard: 'Standard — Photo + Video + Floorplan (from £200)',
+    premium:  'Premium — Photo + Video + Drone + Floorplan (from £300)',
+    teaser:   'Social Media Teaser (£100 / £75 add-on)',
+    unsure:   'Not Sure — Happy to Discuss'
+};
+
+function selectPackage(val) {
+    if (!val) return;
+    var full = PACKAGE_SLUGS[String(val).trim().toLowerCase()] || val;
+    var sel = document.getElementById('pkg-select');
+    setPackageValue(sel, full);
+    sel.dispatchEvent(new Event('change'));
+    // Scoped to the package grid — a bare '.pkg' would also clear the
+    // agent/private cards, which share the class for their styling.
+    document.querySelectorAll('#package-grid .pkg').forEach(function (card) {
+        card.classList.toggle('selected', card.getAttribute('data-package') === full);
+    });
+}
+
 // A stored booking may name a package that is no longer offered — a price change
 // rewrites the option value, so "…(£100 / £50 add-on)" stops matching. Without
 // this the select would silently fall blank and the edit would wipe the package.
@@ -921,7 +946,7 @@ async function prefillFromBooking(b) {
 
     var pkgSelect = document.getElementById('pkg-select');
     setPackageValue(pkgSelect, b["Package"] || '');
-    document.querySelectorAll('.pkg').forEach(function (card) {
+    document.querySelectorAll('#package-grid .pkg').forEach(function (card) {
         card.classList.toggle('selected', card.getAttribute('data-package') === b["Package"]);
     });
     if (b["Presenter Piece"] === 'Yes') {
@@ -1010,6 +1035,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // reschedule prefill writes into are already in their final shape.
     applyBookerType(params.get('type') === 'private' ? 'Private' : 'Agent');
     if (params.get('mode') === 'enquiry') { applyEnquiryMode(); }
+    if (params.has('p')) { selectPackage(params.get('p')); }
 
     // STEP 3: an edit link takes precedence over the older reschedule prefill.
     if (params.has('edit') && params.has('token')) {
@@ -1023,9 +1049,6 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector('input[name="Agent Name"]').value = params.get('a') || '';
         document.querySelector('input[name="Agent Email"]').value = params.get('e') || '';
         
-        let pkgSelect = document.getElementById('pkg-select');
-        setPackageValue(pkgSelect, params.get('p') || '');
-        pkgSelect.dispatchEvent(new Event('change'));
         
         if(params.get('pr') === 'Yes') { document.getElementById('presenter-toggle').checked = true; document.getElementById('presenter-input').value = "Yes"; }
         if(params.get('t') === 'Yes') { document.getElementById('teaser-toggle').checked = true; document.getElementById('teaser-input').value = "Yes"; }
@@ -1043,12 +1066,6 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector('select[name="Bedrooms"]').value = params.get('b') || '';
         document.querySelector('textarea[name="Additional Notes"]').value = params.get('n') || '';
 
-        document.querySelectorAll('.pkg').forEach(card => {
-            if(card.getAttribute('data-package') === params.get('p')) {
-                document.querySelectorAll('.pkg').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-            }
-        });
         
         const headerText = document.getElementById('header-text');
         headerText.innerHTML = "<strong>Welcome back!</strong> We've pre-filled your details. Just pick a new time slot.";
