@@ -25,6 +25,10 @@
         .header p{font-size:14px;color:var(--text-mid);max-width:460px;margin:0 auto;font-weight:300}
         .divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 0 36px}
         
+        .mode-label{font-family:var(--font-display);font-size:16px;letter-spacing:2.5px;color:var(--text-mid);margin-bottom:10px;opacity:0;animation:fu .6s cubic-bezier(0.25, 0.8, 0.25, 1) .15s forwards}
+        .booker-grid{grid-template-columns:1fr 1fr}
+        @media(max-width:520px){.booker-grid{grid-template-columns:1fr 1fr}}
+        .booker-grid .desc{margin-top:2px}
         .packages{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;opacity:0;animation:fu .6s cubic-bezier(0.25, 0.8, 0.25, 1) .15s forwards}
         @media(max-width:520px){.packages{grid-template-columns:1fr 1fr}}
         .pkg{padding:16px 10px;text-align:center;cursor:pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);}
@@ -146,6 +150,13 @@
     </div>
     <div class="divider"></div>
     
+    <div class="mode-label" id="booker-label">Who's booking?</div>
+    <div class="packages booker-grid" id="booker-type">
+        <div class="pkg glass-panel glass-input selected" data-type="Agent"><div class="name">Estate Agent</div><div class="desc">Booking on behalf of a seller</div></div>
+        <div class="pkg glass-panel glass-input" data-type="Private"><div class="name">Private Client</div><div class="desc">It's my own property</div></div>
+    </div>
+
+    <div class="mode-label" id="package-label">Package</div>
     <div class="packages">
         <div class="pkg glass-panel glass-input" data-package="Basic — Photo + Floorplan (from £155)" data-duration="2"><div class="name">Basic</div><div class="price">£155</div><div class="desc">Photo + Floorplan</div></div>
         <div class="pkg glass-panel glass-input" data-package="Standard — Photo + Video + Floorplan (from £200)" data-duration="2"><div class="name">Standard</div><div class="price">£200</div><div class="desc">Photo + Video + Floorplan</div></div>
@@ -165,15 +176,16 @@
         <input type="hidden" name="Time Slot End" id="timeslot-end" value="">
         <input type="hidden" name="Presenter Piece" id="presenter-input" value="No">
         <input type="hidden" name="Teaser Add-on" id="teaser-input" value="No">
+        <input type="hidden" name="Booking Type" id="booking-type-input" value="Agent">
         
         <div class="section-label">Property Details</div>
         <div class="row">
-            <div class="field"><label>Client / Agency Name <span class="req">*</span></label><input type="text" class="glass-input" name="Client Name" required></div>
-            <div class="field"><label>Agent Name <span class="req">*</span></label><input type="text" class="glass-input" name="Agent Name" required placeholder="e.g. Sarah"></div>
+            <div class="field" id="field-agency"><label>Client / Agency Name <span class="req">*</span></label><input type="text" class="glass-input" name="Client Name" required></div>
+            <div class="field"><label id="lbl-agent-name">Agent Name <span class="req">*</span></label><input type="text" class="glass-input" name="Agent Name" required placeholder="e.g. Sarah"></div>
         </div>
         
         <div class="row">
-            <div class="field"><label>Agent Email <span class="req">*</span></label><input type="email" class="glass-input" name="Agent Email" required placeholder="agent@agency.com"></div>
+            <div class="field"><label id="lbl-agent-email">Agent Email <span class="req">*</span></label><input type="email" class="glass-input" name="Agent Email" required placeholder="agent@agency.com"></div>
             <div class="field"><label>Package <span class="req">*</span></label>
                 <select name="Package" class="glass-input" id="pkg-select" required>
                     <option value="" disabled selected>Select package</option>
@@ -207,7 +219,12 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row" id="row-contact-phone" style="display:none">
+            <div class="field"><label>Phone <span class="req">*</span></label><span class="hint">So I can call you back if that's easier</span><input type="tel" class="glass-input" name="Contact Phone" placeholder="07..."></div>
+            <div class="field" style="visibility:hidden"></div>
+        </div>
+
+        <div class="row" id="row-bedrooms">
             <div class="field"><label>Number of Bedrooms <span class="req">*</span></label><span class="hint"> </span>
                 <select name="Bedrooms" class="glass-input" required><option value="" disabled selected>Select</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option></select>
             </div>
@@ -220,12 +237,14 @@
         </div>
         <div class="travel-note">Properties more than 30 miles from our base in Uddingston may incur a travel fee — <strong>£35</strong> over 30 miles, <strong>£50</strong> over 80 miles. We'll confirm this with you when we accept your booking.</div>
         
-        <div class="row">
+        <div class="travel-note" id="private-owner-note" style="display:none">If the shoot is at <strong>your own home</strong>, put your own name, phone and email below. We'll spot that it's you and send a single confirmation rather than two emails.</div>
+
+        <div class="row" id="row-homeowner-contact">
             <div class="field"><label>Homeowner Name <span class="req">*</span></label><input type="text" class="glass-input" name="Homeowner Name" required placeholder="e.g. Emma"></div>
             <div class="field"><label>Homeowner Phone <span class="req">*</span></label><input type="tel" class="glass-input" name="Homeowner Phone" required placeholder="07..."></div>
         </div>
         
-        <div class="row">
+        <div class="row" id="row-homeowner-date">
             <div class="field"><label>Homeowner Email <span class="req">*</span></label><span class="hint">We’ll send them a heads-up before the shoot</span><input type="email" class="glass-input" name="Homeowner Email" required placeholder="homeowner@email.com"></div>
             <div class="field">
                 <label>Preferred Shoot Date <span class="req">*</span></label>
@@ -260,10 +279,10 @@
                 <div id="pkg-hint">Please select a package first to see available time slots.</div>
             </div>
         </div>
-        <div class="gap"></div>
-        <div class="section-label">Access Details</div>
+        <div class="gap" id="gap-access"></div>
+        <div class="section-label" id="sec-access">Access Details</div>
         
-        <div class="row full">
+        <div class="row full" id="row-access-type">
             <div class="field">
                 <label>How will Brandon access the property? <span class="req">*</span></label>
                 <select name="Access Type" class="glass-input" id="access-type" required>
@@ -359,6 +378,94 @@
 <script>
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec"; 
 
+
+// ==========================================
+// FORM MODES
+// ==========================================
+// One page, three shapes: agency booking (the default), private booking, and
+// quote-only enquiry. Each is only a set of fields shown or hidden — validation
+// and the submit path are shared, so there is nothing here to keep in sync.
+var bookingType = 'Agent';
+var isEnquiry = false;
+
+// Hiding a field is not enough: a hidden input that is still `required` blocks
+// submit with a validation error the browser cannot display, and the form just
+// silently does nothing. The original state is remembered so showing it again
+// restores it.
+function setShown(el, shown) {
+    if (!el) return;
+    el.style.display = shown ? '' : 'none';
+    Array.prototype.forEach.call(el.querySelectorAll('input,select,textarea'), function (f) {
+        if (shown) {
+            if (f.getAttribute('data-was-required') === '1') f.required = true;
+        } else {
+            if (f.required) f.setAttribute('data-was-required', '1');
+            f.required = false;
+        }
+    });
+}
+
+function submitLabel() {
+    if (isEnquiry) return 'SEND ENQUIRY';
+    return editRow ? 'UPDATE BOOKING' : 'REQUEST BOOKING';
+}
+
+// Live — the agent/private cards can be clicked at any point.
+function applyBookerType(type) {
+    bookingType = (type === 'Private') ? 'Private' : 'Agent';
+    document.getElementById('booking-type-input').value = bookingType;
+    var priv = bookingType === 'Private';
+
+    document.querySelectorAll('#booker-type .pkg').forEach(function (c) {
+        c.classList.toggle('selected', c.getAttribute('data-type') === bookingType);
+    });
+
+    // A private client has no agency, so the field goes rather than sitting there
+    // as an awkward required box. handleBooking pins the name server-side.
+    setShown(document.getElementById('field-agency'), !priv);
+    document.getElementById('lbl-agent-name').innerHTML =
+        (priv ? 'Your Name' : 'Agent Name') + ' <span class="req">*</span>';
+    document.getElementById('lbl-agent-email').innerHTML =
+        (priv ? 'Your Email' : 'Agent Email') + ' <span class="req">*</span>';
+    document.querySelector('input[name="Agent Email"]').placeholder =
+        priv ? 'you@email.com' : 'agent@agency.com';
+    document.getElementById('private-owner-note').style.display =
+        (priv && !isEnquiry) ? '' : 'none';
+}
+
+// One-shot — enquiry mode is set from the URL at load, before any interaction.
+function applyEnquiryMode() {
+    isEnquiry = true;
+    ['row-bedrooms', 'row-homeowner-contact', 'row-homeowner-date', 'timeslot-row',
+     'gap-access', 'sec-access', 'row-access-type', 'access-meeting',
+     'access-pickup', 'access-lockbox', 'access-other'
+    ].forEach(function (id) { setShown(document.getElementById(id), false); });
+
+    setShown(document.getElementById('row-contact-phone'), true);
+    document.querySelector('input[name="Contact Phone"]').required = true;
+
+    // No date is being requested, so the hidden date field must stop being a gate.
+    document.getElementById('date-picker').required = false;
+
+    document.querySelector('.header h1').textContent = 'Get a Quote';
+    document.getElementById('header-text').textContent =
+        "Tell me about the property and I'll come back to you within 24 hours with availability and pricing.";
+    document.getElementById('package-label').textContent = 'Interested in';
+    document.querySelector('.btn-main').textContent = submitLabel();
+
+    var success = document.getElementById('success');
+    success.querySelector('h3').textContent = 'Enquiry Received';
+    success.querySelector('p').innerHTML =
+        "I'll come back to you within 24 hours.<br>" +
+        '<a href="https://clients.visualsofbf.com/booking" style="color:var(--accent);font-weight:600;text-decoration:none;">Or book a slot now</a> if you already know the date you want.';
+}
+
+document.querySelectorAll('#booker-type .pkg').forEach(function (card) {
+    card.addEventListener('click', function () {
+        applyBookerType(card.getAttribute('data-type'));
+    });
+});
+
 // 🚨 NEW: Variable to track if they actually clicked a Google Maps suggestion
 let isPropertyAddressValid = false;
 
@@ -404,6 +511,7 @@ function showEmailWarning(fromSubmit) {
 // all the way to submit. Agent Email only — Homeowner Email is expected to be a
 // personal address and is never checked. Still at most once per page load.
 document.querySelector('input[name="Agent Email"]').addEventListener('blur', function() {
+    if (bookingType === 'Private') return;
     if (!emailWarningPrompted && isPersonalEmailDomain(this.value)) {
         showEmailWarning(false);
     }
@@ -490,6 +598,7 @@ function getSelectedDuration() {
 
 function initCal() {
     var now = new Date(); calMonth = now.getMonth(); calYear = now.getFullYear(); renderCal();
+    if (isEnquiry) return;   // no date is being picked, so there is nothing to prefetch
     var today = new Date(); var twoWeeks = new Date(); twoWeeks.setDate(today.getDate() + 14);
     prefetchedStartStr = today.toISOString().split('T')[0]; prefetchedEndStr = twoWeeks.toISOString().split('T')[0];
     prefetchPromise = fetch(GOOGLE_SCRIPT_URL + '?action=checkAvailabilityRange&start=' + prefetchedStartStr + '&end=' + prefetchedEndStr)
@@ -644,12 +753,14 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     // between mousedown and click. Never submit underneath an open modal.
     if (document.getElementById('email-warning-modal').style.display === 'flex') { return; }
 
-    if (!document.getElementById('date-picker').value) { toggleCal(); return; }
-    
-    // Safety check: Ensure they picked a time slot
-    if (!document.getElementById('timeslot-input').value) { 
-        alert("Please select a time slot from the available options."); 
-        return; 
+    if (!isEnquiry) {
+        if (!document.getElementById('date-picker').value) { toggleCal(); return; }
+
+        // Safety check: Ensure they picked a time slot
+        if (!document.getElementById('timeslot-input').value) {
+            alert("Please select a time slot from the available options.");
+            return;
+        }
     }
 
     // Safety check: Enforce the Google Maps address selection, but never trap a
@@ -674,7 +785,7 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     // focused, or a browser that fired no blur. Agent Email only — Homeowner
     // Email is expected to be personal and is never checked.
     var agentEmailField = document.querySelector('input[name="Agent Email"]');
-    if (!emailWarningPrompted && isPersonalEmailDomain(agentEmailField.value)) {
+    if (bookingType !== 'Private' && !emailWarningPrompted && isPersonalEmailDomain(agentEmailField.value)) {
         showEmailWarning(true);
         return;
     }
@@ -682,7 +793,7 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     var payload = {}; new FormData(form).forEach(function(val, key) { if (!key.startsWith('_')) payload[key] = val; });
     payload['Time Slot'] = document.getElementById('timeslot-input').value || 'No preference'; 
     payload['Time Slot Start'] = document.getElementById('timeslot-start').value || ''; payload['Time Slot End'] = document.getElementById('timeslot-end').value || '';
-    payload['formType'] = 'booking';
+    payload['formType'] = isEnquiry ? 'enquiry' : 'booking';
     payload['Address Verified'] = addressUnverified ? 'No' : 'Yes';
     if (editRow) { payload['Edit Row'] = editRow; payload['Edit Token'] = editToken; }
     if (duplicateOverride) { payload['Duplicate Override'] = 'Yes'; }
@@ -700,7 +811,7 @@ document.getElementById('booking-form').addEventListener('submit', async functio
             document.getElementById('dup-date').textContent = data.date || '';
             document.getElementById('dup-slot').textContent = data.timeSlot || '';
             document.getElementById('duplicate-modal').style.display = 'flex';
-            btn.textContent = 'REQUEST BOOKING'; btn.disabled = false;
+            btn.textContent = submitLabel(); btn.disabled = false;
             return;
         }
 
@@ -719,7 +830,7 @@ document.getElementById('booking-form').addEventListener('submit', async functio
 
         if (data.status === "error") {
             alert(data.message || 'Something went wrong.');
-            btn.textContent = editRow ? 'UPDATE BOOKING' : 'REQUEST BOOKING';
+            btn.textContent = submitLabel();
             btn.disabled = false;
             return;
         }
@@ -727,7 +838,7 @@ document.getElementById('booking-form').addEventListener('submit', async functio
         // 🚨 This triggers if the slot got booked while they had the tab open
         if (data.status === "conflict") {
             alert("🚨 " + data.message);
-            btn.textContent = 'REQUEST BOOKING'; btn.disabled = false;
+            btn.textContent = submitLabel(); btn.disabled = false;
             
             // Automatically refresh the time slots for them
             var dur = getSelectedDuration();
@@ -738,7 +849,7 @@ document.getElementById('booking-form').addEventListener('submit', async functio
         // If it was a success:
         form.style.display = 'none'; document.getElementById('success').style.display = 'block';
     } catch (err) { 
-        btn.textContent = 'REQUEST BOOKING'; btn.disabled = false; alert('Something went wrong — please try again or email info@visualsofbf.com directly.'); 
+        btn.textContent = submitLabel(); btn.disabled = false; alert('Something went wrong — please try again or email info@visualsofbf.com directly.'); 
     }
 });
 
@@ -766,7 +877,7 @@ var pendingDuplicate = null;
 function setEditMode(on) {
     document.getElementById('edit-banner').style.display = on ? 'block' : 'none';
     var btn = document.querySelector('.btn-main');
-    if (btn) btn.textContent = on ? 'UPDATE BOOKING' : 'REQUEST BOOKING';
+    if (btn) btn.textContent = on ? 'UPDATE BOOKING' : submitLabel();
     var h = document.getElementById('header-text');
     if (on && h) {
         h.innerHTML = "<strong>Updating your booking.</strong> Change what you need below.";
@@ -794,6 +905,7 @@ function setPackageValue(sel, val) {
 // its date so the agent sees real slots — same code path as a normal booking.
 async function prefillFromBooking(b) {
     var setVal = function (sel, val) { var el = document.querySelector(sel); if (el) el.value = val == null ? '' : val; };
+    applyBookerType(b["Booking Type"] === 'Private' ? 'Private' : 'Agent');
     setVal('input[name="Client Name"]', b["Client Name"]);
     setVal('input[name="Agent Name"]', b["Agent Name"]);
     setVal('input[name="Agent Email"]', b["Agent Email"]);
@@ -877,7 +989,7 @@ document.getElementById('dup-edit').addEventListener('click', function () {
     var btn = document.querySelector('.btn-main'); btn.textContent = 'LOADING...'; btn.disabled = true;
     enterEditMode(d.row, d.editToken).then(function () {
         btn.disabled = false;
-        if (!editRow) btn.textContent = 'REQUEST BOOKING';
+        if (!editRow) btn.textContent = submitLabel();
     });
 });
 
@@ -894,6 +1006,11 @@ document.getElementById('dup-new').addEventListener('click', function () {
 window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
 
+    // Modes come off the URL before anything else, so the fields an edit or a
+    // reschedule prefill writes into are already in their final shape.
+    applyBookerType(params.get('type') === 'private' ? 'Private' : 'Agent');
+    if (params.get('mode') === 'enquiry') { applyEnquiryMode(); }
+
     // STEP 3: an edit link takes precedence over the older reschedule prefill.
     if (params.has('edit') && params.has('token')) {
         enterEditMode(params.get('edit'), params.get('token'));
@@ -901,6 +1018,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if(params.has('c')) {
+        if (params.get('c') === 'Private Client') { applyBookerType('Private'); }
         document.querySelector('input[name="Client Name"]').value = params.get('c') || '';
         document.querySelector('input[name="Agent Name"]').value = params.get('a') || '';
         document.querySelector('input[name="Agent Email"]').value = params.get('e') || '';
