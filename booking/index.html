@@ -120,6 +120,16 @@
         .submit-area{margin-top:32px;text-align:center}
         .btn-main{font-family:var(--font-display);font-size:18px;letter-spacing:3px;color:var(--bg);background:linear-gradient(135deg,var(--accent),var(--accent-hover));border:none;border-radius:12px;padding:16px 48px;cursor:pointer;transition:all .3s cubic-bezier(0.25, 0.8, 0.25, 1);width:100%;max-width:320px; box-shadow: 0 8px 24px var(--glow);}
         .btn-main:hover{transform:translateY(-3px);box-shadow:0 12px 32px var(--glow)}
+        .decision-card{padding:28px 24px;text-align:center}
+        .decision-address{font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px}
+        .decision-when,.decision-line,.decision-note{font-size:14px;color:var(--text-mid);margin-bottom:6px}
+        .decision-note{margin-top:14px}
+        .btn-decide{font-family:var(--font-display);font-size:18px;letter-spacing:3px;color:var(--bg);background:linear-gradient(135deg,var(--accent),var(--accent-hover));border:none;border-radius:12px;padding:16px 48px;cursor:pointer;width:100%;max-width:320px;margin-top:22px;box-shadow:0 8px 24px var(--glow)}
+        .btn-decide-reject{background:#c62828;color:#fff;box-shadow:none}
+        .btn-decide:disabled{opacity:.6}
+        .decision-emoji{font-size:44px;line-height:1;margin-bottom:12px}
+        .decision-heading{font-family:var(--font-display);font-size:30px;letter-spacing:2px;color:var(--accent);margin-bottom:10px}
+        .decision-message{font-size:15px;color:var(--text);white-space:pre-line}
         
         .turnaround{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;padding:12px 18px;background:var(--glow);border:1px solid rgba(200,164,90,0.2);border-radius:10px;font-size:13px;color:var(--accent);font-weight:400;letter-spacing:.5px}
         .turnaround svg{flex-shrink:0}
@@ -1027,9 +1037,67 @@ document.getElementById('dup-new').addEventListener('click', function () {
     else { f.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
 });
 
+// ADMIN DECISIONS: the Approve/Reject buttons in Brandon's emails land here. The page
+// confirms, then calls the script in the background. Gmail on iPhone can't open
+// script.google.com links itself — its browser is signed into several Google
+// accounts, which breaks Apps Script URLs.
+var DECISIONS = {
+    approve: ['Approve Booking', 'Approve'], reject: ['Reject Booking', 'Reject'],
+    approveupdate: ['Approve Date Change', 'Approve Change'], rejectupdate: ['Reject Date Change', 'Reject Change']
+};
+function decisionEl(parent, tag, cls, text) {
+    var el = document.createElement(tag); el.className = cls; el.textContent = text; parent.appendChild(el); return el;
+}
+function showDecision(params) {
+    var decision = params.get('decision'), meta = DECISIONS[decision];
+    var q = '&row=' + encodeURIComponent(params.get('row') || '') + '&token=' + encodeURIComponent(params.get('token') || '');
+    document.querySelectorAll('.wrap > *:not(.logo-bar):not(.header)').forEach(function (el) { el.style.display = 'none'; });
+    document.title = 'Booking Decision — Visuals of BF';
+    document.querySelector('.header h1').textContent = meta ? meta[0] : 'Invalid Link';
+    var headerText = document.getElementById('header-text');
+    if (!meta) { headerText.textContent = 'This link is not valid.'; return; }
+    headerText.textContent = 'Loading booking…';
+    var card = document.createElement('div');
+    card.className = 'form-card glass-panel decision-card';
+    document.querySelector('.wrap').appendChild(card);
+    card.style.display = 'none';
+
+    fetch(GOOGLE_SCRIPT_URL + '?action=decisionInfo' + q).then(function (r) { return r.json(); }).then(function (info) {
+        if (!info.ok) { headerText.textContent = info.message; return; }
+        var isChange = /update$/.test(decision);
+        headerText.textContent = isChange ? 'Requested change for this booking:' : 'Check the booking, then confirm.';
+        card.style.display = '';
+        decisionEl(card, 'p', 'decision-address', info.address);
+        decisionEl(card, 'p', 'decision-when', (isChange ? 'Currently ' : '') + info.date + ' · ' + info.time);
+        if (isChange) {
+            if (!info.pendingChange) { decisionEl(card, 'p', 'decision-note', 'Nothing pending — this change has already been actioned.'); return; }
+            info.pendingChange.forEach(function (l) { decisionEl(card, 'p', 'decision-line', l); });
+        } else if (info.status !== 'Pending') {
+            decisionEl(card, 'p', 'decision-note', 'This booking has already been ' + String(info.status).toLowerCase() + '.');
+            return;
+        }
+        var btn = decisionEl(card, 'button', 'btn-decide' + (/^reject/.test(decision) ? ' btn-decide-reject' : ''), meta[1]);
+        btn.onclick = function () {
+            btn.disabled = true; btn.textContent = 'Sending…';
+            fetch(GOOGLE_SCRIPT_URL + '?action=' + decision + q + '&format=json').then(function (r) { return r.json(); }).then(function (res) {
+                headerText.textContent = '';
+                card.innerHTML = '';
+                decisionEl(card, 'div', 'decision-emoji', res.emoji);
+                decisionEl(card, 'h2', 'decision-heading', res.heading);
+                decisionEl(card, 'p', 'decision-message', res.message);
+            }).catch(function () {
+                btn.disabled = false; btn.textContent = 'Try Again';
+                headerText.textContent = "Couldn't confirm it went through. Tap again — if it already did, you'll be told.";
+            });
+        };
+    }).catch(function () { headerText.textContent = "Couldn't reach the booking system. Check your connection and reload."; });
+}
+
 // MAGIC RESCHEDULE SCRIPT: Pre-fills form fields based on URL parameters
 window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
+
+    if (params.has('decision')) { showDecision(params); return; }
 
     // Modes come off the URL before anything else, so the fields an edit or a
     // reschedule prefill writes into are already in their final shape.
