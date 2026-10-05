@@ -345,6 +345,8 @@
             <div class="field"><label>Additional Notes</label><span class="hint">Anything else we should know?</span><textarea name="Additional Notes" class="glass-input" placeholder="Leave blank if none"></textarea></div>
         </div>
 
+        <div id="travel-notice" style="display:none; font-size:14px; line-height:1.5; color:var(--text); margin-top:24px; font-weight:300; background: var(--input); padding: 14px 16px; border-radius: 8px; border-left: 3px solid var(--accent);"></div>
+
         <div class="submit-area">
             <button type="submit" class="btn-main">Request Booking</button>
             <div class="turnaround">
@@ -535,12 +537,12 @@ function initAutocomplete() {
     // 🚨 NEW: If they click a valid suggestion, mark it as true
     propAutocomplete.addListener('place_changed', function() {
         var place = propAutocomplete.getPlace();
-        if (place.geometry) { isPropertyAddressValid = true; }
+        if (place.geometry) { isPropertyAddressValid = true; updateTravelNotice(); }
     });
 
     // 🚨 NEW: If they type manually after clicking, reset it to false
     propInput.addEventListener('input', function() {
-        isPropertyAddressValid = false;
+        isPropertyAddressValid = false; renderTravelNotice(null);
     });
 
     new google.maps.places.Autocomplete(document.getElementById('pickup-address'), { componentRestrictions: {country: 'uk'} });
@@ -685,6 +687,57 @@ function selectSlot(el) {
     document.getElementById('timeslot-input').value = el.dataset.fulltime; 
     document.getElementById('timeslot-start').value = el.dataset.start; 
     document.getElementById('timeslot-end').value = el.dataset.end;
+    updateTravelNotice();
+}
+
+// ===== Travel between neighbouring shoots =====
+// The server decides (under 30 min: nothing, 30–45: heads-up, over 45: slot
+// refused) and re-checks on submit; this only shows the client what it said.
+var travelCheckSeq = 0;
+function clearSlotSelection() {
+    document.querySelectorAll('.timeslot').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('timeslot-input').value = ''; document.getElementById('timeslot-start').value = ''; document.getElementById('timeslot-end').value = '';
+}
+function renderTravelNotice(data) {
+    var box = document.getElementById('travel-notice');
+    if (!data || !data.message || data.level === 'ok') { box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.innerHTML = '';
+    var title = document.createElement('strong'); title.textContent = data.message.title;
+    var body = document.createElement('div'); body.style.marginTop = '4px'; body.textContent = data.message.body;
+    box.appendChild(title); box.appendChild(body);
+    if (data.level === 'block') {
+        clearSlotSelection();
+        var next = data.suggest && document.querySelector('.timeslot:not(.unavailable)[data-start="' + data.suggest.start + '"]');
+        var btns = document.createElement('div'); btns.style.cssText = 'display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;';
+        var mk = function (label, colour, fn) {
+            var b = document.createElement('button'); b.type = 'button'; b.className = 'glass-input'; b.textContent = label;
+            b.style.cssText = 'flex:1; min-width:170px; padding:12px; cursor:pointer; color:' + colour + '; font-family:var(--font-body); font-size:14px; border-radius:10px;';
+            b.onclick = fn; btns.appendChild(b);
+        };
+        if (next) {
+            body.textContent += ' The next one available for this property is ' + next.querySelector('.slot-time').textContent + '.';
+            mk('Use that slot', 'var(--accent)', function () { selectSlot(next); });
+        }
+        mk('Pick a different time', 'var(--text)', function () { document.getElementById('timeslot-row').scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+        box.appendChild(btns);
+    }
+    box.style.display = 'block';
+}
+async function updateTravelNotice() {
+    var seq = ++travelCheckSeq;
+    var start = document.getElementById('timeslot-start').value, end = document.getElementById('timeslot-end').value;
+    var date = document.getElementById('date-picker').value, address = document.getElementById('property-address').value;
+    if (isEnquiry || !isPropertyAddressValid || !start || !end || !date || !address) { renderTravelNotice(null); return; }
+    var alts = [];
+    document.querySelectorAll('.timeslot:not(.unavailable)').forEach(function (el) {
+        if (el.dataset.start > start) alts.push(el.dataset.start + '-' + el.dataset.end);
+    });
+    try {
+        var resp = await fetch(GOOGLE_SCRIPT_URL + '?action=travelCheck&date=' + date + '&start=' + start + '&end=' + end +
+            '&address=' + encodeURIComponent(address) + '&alts=' + encodeURIComponent(alts.join(',')));
+        var data = await resp.json();
+        if (seq === travelCheckSeq) renderTravelNotice(data);
+    } catch (err) { if (seq === travelCheckSeq) renderTravelNotice(null); }   // never get in the way of a booking
 }
 
 async function checkAvailability(date, duration) {
@@ -693,6 +746,7 @@ async function checkAvailability(date, duration) {
     
     row.style.display = 'block'; grid.innerHTML = ''; error.style.display = 'none'; loading.style.display = 'block';
     arrivalHint.style.display = 'none'; 
+    renderTravelNotice(null);
     document.getElementById('timeslot-input').value = ''; document.getElementById('timeslot-start').value = ''; document.getElementById('timeslot-end').value = '';
     
     try {
