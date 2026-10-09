@@ -243,7 +243,7 @@
 
         <div class="row three">
             <div class="field"><label>Flat / Unit</label><input type="text" class="glass-input" name="Flat Number" placeholder="e.g. 3/1"></div>
-            <div class="field"><label>Property Address <span class="req">*</span></label><input type="text" class="glass-input" id="property-address" name="Property Address" required placeholder="Start typing address or postcode..."></div>
+            <div class="field"><label>Property Address <span class="req">*</span></label><input type="text" class="glass-input" id="property-address" name="Property Address" required placeholder="Start typing address or postcode..."><div id="address-changed-note" style="display:none; margin-top:8px; font-size:13px; color:var(--accent);">Please enter the address of the new property.</div></div>
         </div>
         <div class="travel-note">Properties more than 30 miles from our base in Uddingston may incur a travel fee — <strong>£35</strong> over 30 miles, <strong>£50</strong> over 80 miles. We'll confirm this with you when we accept your booking.</div>
         
@@ -362,7 +362,7 @@
             <p style="font-size:14px; color:var(--text); margin-bottom:20px;">Did you want to change something about it?</p>
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
                 <button type="button" id="dup-edit" class="glass-input" style="flex:1; min-width:170px; padding:12px; cursor:pointer; color:var(--accent); font-family:var(--font-body); font-size:14px; border-radius:10px;">Yes, update that booking</button>
-                <button type="button" id="dup-new" class="glass-input" style="flex:1; min-width:170px; padding:12px; cursor:pointer; color:var(--text); font-family:var(--font-body); font-size:14px; border-radius:10px;">No, this is a different property</button>
+                <button type="button" id="dup-new" class="glass-input" style="flex:1; min-width:170px; padding:12px; cursor:pointer; color:var(--text); font-family:var(--font-body); font-size:14px; border-radius:10px;">No, I meant a different address</button>
             </div>
         </div>
     </div>
@@ -1083,12 +1083,21 @@ document.getElementById('dup-edit').addEventListener('click', function () {
 });
 
 document.getElementById('dup-new').addEventListener('click', function () {
+    // Never resubmit from here: the address on the form is the one that's already
+    // booked. That is how 38 Strathcona Drive went in as 45 Aitken Street (2026-10-09).
     document.getElementById('duplicate-modal').style.display = 'none';
     pendingDuplicate = null;
-    duplicateOverride = true;          // don't ask again for this submission
-    var f = document.getElementById('booking-form');
-    if (f.requestSubmit) { f.requestSubmit(); }
-    else { f.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
+    var addr = document.getElementById('property-address');
+    addr.value = '';
+    document.querySelector('input[name="Flat Number"]').value = '';
+    isPropertyAddressValid = false;
+    addressFallbackOffered = false;
+    renderTravelNotice(null);
+    var note = document.getElementById('address-changed-note');
+    note.style.display = 'block';
+    addr.addEventListener('input', function () { note.style.display = 'none'; }, { once: true });
+    addr.scrollIntoView({ block: 'center' });
+    addr.focus();
 });
 
 // ADMIN DECISIONS: the Approve/Reject buttons in Brandon's emails land here. The page
