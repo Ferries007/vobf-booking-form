@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Booking Decision — Visuals of BF</title>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<style>
+:root{--bg:#0a0a0a;--card:#141414;--border:rgba(255,255,255,.08);--text:#f0ece4;--mid:#8a8680;--accent:#c8a45a;--accent2:#d4b46a;--red:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.card{width:100%;max-width:440px;background:var(--card);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:16px;padding:36px 24px;text-align:center}
+.brand{font-size:11px;letter-spacing:3px;color:var(--accent);margin-bottom:22px}
+.emoji{font-size:44px;line-height:1;margin-bottom:14px}
+h1{font-size:24px;font-weight:600;letter-spacing:.3px;margin-bottom:10px}
+p{font-size:15px;line-height:1.6;color:var(--mid);white-space:pre-line}
+p.msg{color:var(--text)}
+.spin{width:34px;height:34px;margin:0 auto 18px;border:3px solid rgba(200,164,90,.2);border-top-color:var(--accent);border-radius:50%;animation:s .8s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+button{font:inherit;font-size:16px;font-weight:600;letter-spacing:1px;color:var(--bg);background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;border-radius:12px;padding:15px 40px;margin-top:22px;width:100%;max-width:300px;cursor:pointer}
+button.reject{background:var(--red);color:#fff}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+</style>
+</head>
+<body>
+<main class="card" id="card" aria-live="polite"><div class="brand">VISUALS OF BF</div><div class="spin"></div><h1>Loading…</h1></main>
+<noscript><p style="text-align:center">This page needs JavaScript to send your decision.</p></noscript>
+<script>
+// One-tap Approve/Reject from Brandon's emails. The decision is sent as soon as
+// the page opens; there is no confirm card (the old /booking/?decision= page keeps
+// one for links in older emails). Never link straight to script.google.com: Gmail
+// on iPhone can't open it (multi-account Google sessions).
+// Link scanners: nothing is sent without JavaScript running, and an automated
+// browser (navigator.webdriver) gets a button instead of an automatic send. Links
+// are single-use per booking, so a second open just says "Already Processed".
+(function () {
+  var SCRIPT = 'https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec';
+  var DECISIONS = {
+    approve: ['Approving booking…', 'Approve booking'], reject: ['Rejecting booking…', 'Reject booking'],
+    approveupdate: ['Approving date change…', 'Approve change'], rejectupdate: ['Rejecting date change…', 'Reject change']
+  };
+  var card = document.getElementById('card');
+  var params = new URLSearchParams(location.search);
+  var decision = params.get('decision'), meta = DECISIONS[decision];
+  var row = params.get('row') || '', token = params.get('token') || '';
+  var slowTimer;
+
+  function show(parts) {
+    clearTimeout(slowTimer);
+    card.replaceChildren();
+    var brand = document.createElement('div'); brand.className = 'brand'; brand.textContent = 'VISUALS OF BF';
+    card.appendChild(brand);
+    parts.forEach(function (p) {
+      var el = document.createElement(p[0]);
+      if (p[1]) el.className = p[1];
+      if (p[2] != null) el.textContent = p[2];
+      if (p[3]) el.onclick = p[3];
+      card.appendChild(el);
+    });
+    var btn = card.querySelector('button');
+    if (btn) btn.focus();
+  }
+  function offerButton(note) {
+    show([['h1', '', meta[1].replace(/^./, function (c) { return c.toUpperCase(); })],
+          ['p', '', note],
+          ['button', /^reject/.test(decision) ? 'reject' : '', meta[1], send]]);
+  }
+  function send() {
+    show([['div', 'spin'], ['h1', '', meta[0]], ['p', '', '']]);
+    slowTimer = setTimeout(function () {
+      var p = card.querySelector('p');
+      if (p) p.textContent = 'Still working. Google is creating the folder, calendar event and emails.';
+    }, 6000);
+    var url = SCRIPT + '?action=' + encodeURIComponent(decision) + '&row=' + encodeURIComponent(row) +
+              '&token=' + encodeURIComponent(token) + '&format=json';
+    fetch(url).then(function (r) { return r.json(); }).then(function (res) {
+      document.title = (res.heading || 'Done') + ' — Visuals of BF';
+      show([['div', 'emoji', res.emoji || ''], ['h1', '', res.heading || 'Done'], ['p', 'msg', res.message || '']]);
+    }).catch(function () {
+      offerButton("Couldn't confirm it went through. Tap to try again. If it already worked, you'll be told.");
+    });
+  }
+
+  if (!meta || !/^\d+$/.test(row) || !token) {
+    show([['div', 'emoji', '⚠️'], ['h1', '', 'Invalid link'], ['p', '', 'This link is not valid.']]);
+  } else if (navigator.webdriver) {
+    offerButton('Tap to send this decision.');
+  } else {
+    send();
+  }
+})();
+</script>
+</body>
+</html>
