@@ -394,7 +394,25 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDV0HpEXZJlvlZjHb0s81yamA2EtI0etG4&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec"; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFn0YunrdAGjxGoA41K5O89xYXdkXXRFbLFcHzTrLgtrS64FayxQwQzOIwadv8KNAN/exec";
+
+// ===== Lead source =====
+// Where this visitor came from, sent with the booking/enquiry so the sheet shows
+// which channel produced it. UTM tags win, else the referring site. First-party:
+// no cookies, no storage, so no consent banner is needed for it.
+function computeLeadSource(search, referrer, ownHost) {
+    var p = new URLSearchParams(search || '');
+    var utm = ['utm_source', 'utm_medium', 'utm_campaign']
+        .map(function (k) { return (p.get(k) || '').trim(); }).filter(Boolean);
+    if (utm.length) return utm.join(' / ').slice(0, 120);
+    var host = '';
+    try { host = referrer ? new URL(referrer).hostname : ''; } catch (e) { host = ''; }
+    if (!host || host === ownHost) return 'direct';
+    if (host.replace(/^www\./, '') === 'visualsofbf.com') return 'website';
+    return host.slice(0, 120);
+}
+var LEAD_SOURCE = computeLeadSource(location.search, document.referrer, location.hostname);
+// ===== end lead source ===== 
 
 
 // ==========================================
@@ -866,6 +884,7 @@ document.getElementById('booking-form').addEventListener('submit', async functio
     payload['formType'] = isEnquiry ? 'enquiry' : 'booking';
     payload['Address Verified'] = addressUnverified ? 'No' : 'Yes';
     if (editRow) { payload['Edit Row'] = editRow; payload['Edit Token'] = editToken; }
+    else { payload['Lead Source'] = LEAD_SOURCE; }
     if (duplicateOverride) { payload['Duplicate Override'] = 'Yes'; }
     
     var btn = form.querySelector('.btn-main'); btn.textContent = 'SENDING...'; btn.disabled = true;
